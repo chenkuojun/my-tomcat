@@ -1,6 +1,5 @@
 package com.chen.mytomcat.utils;
 
-import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
@@ -12,7 +11,6 @@ import java.util.Map;
  *
  * @author wangguangwu
  */
-@Slf4j
 public class YamlParseUtil {
 
     @SuppressWarnings("rawtypes")

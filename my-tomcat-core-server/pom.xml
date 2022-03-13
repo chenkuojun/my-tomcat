@@ -9,7 +9,7 @@
         <version>2.6.4</version>
         <relativePath/>
     </parent>
-    <groupId>com.chen</groupId>
+    <groupId>com.chenkuojun</groupId>
     <artifactId>my-tomcat-core-server</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>my-tomcat-core-server</name>
@@ -18,18 +18,6 @@
         <java.version>1.8</java.version>
     </properties>
     <dependencies>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -38,27 +26,17 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-            <!--            <scope>provided</scope>-->
         </dependency>
 
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.30</version>
         </dependency>
 
         <!-- lombook -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <optional>true</optional>
-            <version>1.16.22</version>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
         </dependency>
 
     </dependencies>

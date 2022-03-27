@@ -152,6 +152,7 @@ public final class RequestUtil {
      * codes in the request URL that is often reported in error messages.
      *
      * @param message The message string to be filtered
+     * @return  boolean
      */
     public static String filter(String message) {
 
@@ -191,6 +192,7 @@ public final class RequestUtil {
      * try to perform security checks for malicious input.
      *
      * @param path Relative path to be normalized
+     * @return String
      */
     public static String normalize(String path) {
 
@@ -249,6 +251,7 @@ public final class RequestUtil {
      * <code>null</code> is returned.
      *
      * @param contentType a content type header
+     * @return String
      */
     public static String parseCharacterEncoding(String contentType) {
 
@@ -274,6 +277,7 @@ public final class RequestUtil {
      * Parse a cookie header into an array of cookies according to RFC 2109.
      *
      * @param header Value of an HTTP "Cookie" header
+     * @return Cookie[]
      */
     public static Cookie[] parseCookieHeader(String header) {
 
@@ -317,14 +321,15 @@ public final class RequestUtil {
      * <strong>IMPLEMENTATION NOTE</strong>:  URL decoding is performed
      * individually on the parsed name and value elements, rather than on
      * the entire query string ahead of time, to properly deal with the case
-     * where the name or value includes an encoded "=" or "&" character
+     * where the name or value includes an
      * that would otherwise be interpreted as a delimiter.
      *
      * @param map Map that accumulates the resulting parameters
      * @param data Input string containing request parameters
-     * @param urlParameters true if we're parsing parameters on the URL
+     * @param encoding encoding
      *
      * @exception IllegalArgumentException if the data is malformed
+     * @throws UnsupportedEncodingException UnsupportedEncodingException
      */
     public static void parseParameters(Map map, String data, String encoding)
         throws UnsupportedEncodingException {
@@ -349,6 +354,7 @@ public final class RequestUtil {
      *
      * @exception IllegalArgumentException if a '%' character is not followed
      * by a valid 2-digit hexadecimal number
+     * @return String
      */
     public static String URLDecode(String str) {
 
@@ -364,6 +370,7 @@ public final class RequestUtil {
      * @param enc The encoding to use; if null, the default encoding is used
      * @exception IllegalArgumentException if a '%' character is not followed
      * by a valid 2-digit hexadecimal number
+     * @return String
      */
     public static String URLDecode(String str, String enc) {
 
@@ -384,6 +391,7 @@ public final class RequestUtil {
      *
      * @param bytes The url-encoded byte array
      * @exception IllegalArgumentException if a '%' character is not followed
+     * @return String
      * by a valid 2-digit hexadecimal number
      */
     public static String URLDecode(byte[] bytes) {
@@ -398,6 +406,7 @@ public final class RequestUtil {
      * @param enc The encoding to use; if null, the default encoding is used
      * @exception IllegalArgumentException if a '%' character is not followed
      * by a valid 2-digit hexadecimal number
+     * @return String
      */
     public static String URLDecode(byte[] bytes, String enc) {
 
@@ -473,7 +482,7 @@ public final class RequestUtil {
      * <strong>IMPLEMENTATION NOTE</strong>:  URL decoding is performed
      * individually on the parsed name and value elements, rather than on
      * the entire query string ahead of time, to properly deal with the case
-     * where the name or value includes an encoded "=" or "&" character
+     * where the name or value includes an
      * that would otherwise be interpreted as a delimiter.
      *
      * NOTE: byte array data is modified by this method.  Caller beware.

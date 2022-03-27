@@ -102,6 +102,7 @@ public class HttpResponse implements HttpServletResponse {
    * Returns a default status message for the specified HTTP status code.
    *
    * @param status The status code for which a message is desired
+   * @return  String
    */
   protected String getStatusMessage(int status) {
     switch (status) {
@@ -201,6 +202,7 @@ public class HttpResponse implements HttpServletResponse {
   }
   /**
    * Send the HTTP response headers, if this has not already occurred.
+   *  @throws IOException ioException
    */
   protected void sendHeaders() throws IOException {
     if (isCommitted())

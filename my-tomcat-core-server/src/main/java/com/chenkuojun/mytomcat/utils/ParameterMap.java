@@ -147,6 +147,7 @@ public final class ParameterMap extends HashMap {
 
     /**
      * Return the locked state of this parameter map.
+     *  @return boolean
      */
     public boolean isLocked() {
 

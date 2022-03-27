@@ -79,6 +79,8 @@ public class CookieTools {
 
     /** Return the header name to set the cookie, based on cookie
      *  version
+     *  @param cookie cookie
+     *  @return String
      */
     public static String getCookieHeaderName(Cookie cookie) {
         int version = cookie.getVersion();
@@ -92,6 +94,8 @@ public class CookieTools {
 
     /** Return the header value used to set this cookie
      *  @deprecated Use StringBuffer version
+     *  @param cookie cookie
+     *  @return String
      */
     public static String getCookieHeaderValue(Cookie cookie) {
         StringBuffer buf = new StringBuffer();
@@ -99,7 +103,10 @@ public class CookieTools {
         return buf.toString();
     }
 
-    /** Return the header value used to set this cookie
+    /**
+     *
+     * @param cookie cookie
+     * @param buf buf
      */
     public static void getCookieHeaderValue(Cookie cookie, StringBuffer buf) {
         int version = cookie.getVersion();

@@ -272,7 +272,7 @@ public class SocketInputStream extends InputStream {
      * function is meant to be used during the HTTP request header parsing.
      * Do NOT attempt to read the request body using it.
      *
-     * @param
+     * @param header header
      * @throws IOException If an exception occurs during the underlying socket
      * read operations, or if the given buffer is not big enough to accomodate
      * the whole line.
@@ -510,6 +510,8 @@ public class SocketInputStream extends InputStream {
 
     /**
      * Fill the internal buffer using data from the undelying input stream.
+     *
+     * @throws IOException  ioException
      */
     protected void fill()
         throws IOException {

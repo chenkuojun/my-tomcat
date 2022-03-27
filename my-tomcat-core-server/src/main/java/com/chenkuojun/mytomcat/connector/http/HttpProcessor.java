@@ -87,6 +87,7 @@ public class HttpProcessor {
    *
    * @exception IOException if an input/output error occurs
    * @exception ServletException if a parsing error occurs
+   * @return
    */
   private void parseHeaders(SocketInputStream input)
     throws IOException, ServletException {
@@ -234,6 +235,7 @@ public class HttpProcessor {
    * are present), return <code>null</code> instead.
    *
    * @param path Path to be normalized
+   * @return String
    */
   protected String normalize(String path) {
     if (path == null)

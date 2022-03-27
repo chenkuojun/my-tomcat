@@ -84,9 +84,9 @@ public class ResponseStream extends ServletOutputStream {
 
     // ------------------------------------------------------------- Properties
 
-
     /**
      * [Package Private] Return the "commit response on flush" flag.
+     * @return boolean
      */
     public boolean getCommit() {
 

@@ -206,6 +206,7 @@ public class HttpRequest implements HttpServletRequest {
    * be overridden if necessary.
    *
    * @exception IOException if an input/output error occurs
+   * @return  ServletInputStream
    */
   public ServletInputStream createInputStream() throws IOException {
     return (new RequestStream(this));

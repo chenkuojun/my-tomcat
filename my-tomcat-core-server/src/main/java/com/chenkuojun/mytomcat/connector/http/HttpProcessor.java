@@ -64,8 +64,10 @@ public class HttpProcessor {
       }else {
         // 动态 servlet 处理
         HttpServlet httpServlet = servletMap.get("/");
-        HttpResponseFacade httpResponseFacade = new HttpResponseFacade(response);
-        httpServlet.service(request, httpResponseFacade);
+        // todo 研究一下这个玩意到底好在哪里，并没有get到这个设计模式的用处
+        //HttpResponseFacade httpResponseFacade = new HttpResponseFacade(response);
+        //httpServlet.service(request, httpResponseFacade);
+        httpServlet.service(request, response);
 //        ServletProcessor processor = new ServletProcessor(this.servletMap);
 //        processor.process(request, response);
       }

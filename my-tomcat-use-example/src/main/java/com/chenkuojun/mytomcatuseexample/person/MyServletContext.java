@@ -168,7 +168,7 @@ public class MyServletContext implements ServletContext {
     }
 
     public void addInitParameter(String name, String value) {
-        org.springframework.util.Assert.notNull(name, "Parameter name must not be null");
+        Assert.notNull(name, "Parameter name must not be null");
         this.initParameters.put(name, value);
     }
 
@@ -209,8 +209,8 @@ public class MyServletContext implements ServletContext {
 
 
     public void registerNamedDispatcher(String name, RequestDispatcher requestDispatcher) {
-        org.springframework.util.Assert.notNull(name, "RequestDispatcher name must not be null");
-        org.springframework.util.Assert.notNull(requestDispatcher, "RequestDispatcher must not be null");
+        Assert.notNull(name, "RequestDispatcher name must not be null");
+        Assert.notNull(requestDispatcher, "RequestDispatcher must not be null");
         this.namedRequestDispatchers.put(name, requestDispatcher);
     }
 

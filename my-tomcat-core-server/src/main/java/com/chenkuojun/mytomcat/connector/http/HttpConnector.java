@@ -1,6 +1,8 @@
 package com.chenkuojun.mytomcat.connector.http;
 
 import com.chenkuojun.mytomcat.utils.YamlParseUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServlet;
 import java.io.IOException;
@@ -11,11 +13,16 @@ import java.util.Map;
 
 public class HttpConnector implements Runnable {
 
+  static Logger log = LoggerFactory.getLogger(HttpConnector.class);
+
   boolean stopped;
+
   private String scheme = "http";
 
-  private int port = 8080;
+  // default port
+  private int port = 8090;
 
+  // default host
   private String host = "127.0.0.1";
   private final Map<String, HttpServlet> servletMap;
 
@@ -28,11 +35,11 @@ public class HttpConnector implements Runnable {
 
   public void run() {
     ServerSocket serverSocket = null;
-    // 加载配置文件中的主机和端口号 todo 此处未生效
+    // 加载配置文件中的主机和端口号
     loadProperties();
     try {
       serverSocket =  new ServerSocket(port, 1, InetAddress.getByName(host));
-      System.out.println("my-tomcat 启动成功,ip为:" + host + "----端口号为:"+port);
+      log.info("my-tomcat start up success,ip is :{},port is:{}" ,host,port);
     }
     catch (IOException e) {
       e.printStackTrace();
@@ -43,7 +50,8 @@ public class HttpConnector implements Runnable {
       Socket socket = null;
       try {
         socket = serverSocket.accept();
-        System.out.println("接收到新的请求");
+        log.info("receiver new quest");
+        log.info("接收到新的请求");
       }
       catch (Exception e) {
         continue;
@@ -60,9 +68,10 @@ public class HttpConnector implements Runnable {
   }
 
   private void loadProperties() {
+    log.info("my-tomcat is load properties");
     port = YamlParseUtil.INSTANCE.getValueByKey("server.port") == null
             ? port : (int) YamlParseUtil.INSTANCE.getValueByKey("server.port");
-    System.out.println("my-tomcat 正在启动,ip为:" + host + "----端口号为:"+port);
+    log.info("【my-tomcat try starting with ip :{},and the port is:{}】", host,port);
     host = YamlParseUtil.INSTANCE.getValueByKey("server.host") == null
             ? host : (String) YamlParseUtil.INSTANCE.getValueByKey("server.host");
   }

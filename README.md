@@ -15,7 +15,7 @@ SNAPSHOT 版本依赖
 <dependency>
   <groupId>com.chenkuojun</groupId>
   <artifactId>my-tomcat-core-server</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
 </dependency>
 ~~~
 
@@ -24,4 +24,7 @@ SNAPSHOT 版本依赖
 # 打包命令
 mvn clean source:jar javadoc:jar deploy -DskipTests
 ~~~
+
+重新上传jar包出现了 401问题,有可能是settings.xml 文件导致的，
+利用 mvn -X 命令查看当前生效的是哪个settings 文件
 

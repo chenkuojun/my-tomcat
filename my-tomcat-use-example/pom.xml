@@ -5,11 +5,11 @@
     <parent>
         <groupId>com.chenkuojun</groupId>
         <artifactId>my-tomcat</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </parent>
 
     <artifactId>my-tomcat-use-example</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>my-tomcat-use-example</name>
     <description>Demo project for Spring Boot</description>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>com.chenkuojun</groupId>
             <artifactId>my-tomcat-core-server</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

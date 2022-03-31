@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.chenkuojun</groupId>
     <artifactId>my-tomcat</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -47,7 +47,7 @@
         <servlet-api.version>4.0.1</servlet-api.version>
         <spring-boot.version>2.6.5</spring-boot.version>
         <snakeyaml.version>1.30</snakeyaml.version>
-        <mytomcat.version>1.0.0</mytomcat.version>
+        <mytomcat.version>1.0.1</mytomcat.version>
         <yaml.version>1.30</yaml.version>
         <jakarta.servlet-api.version>5.0.0</jakarta.servlet-api.version>
         <maven-project-info-reports-plugin.version>3.2.1</maven-project-info-reports-plugin.version>
@@ -56,6 +56,8 @@
         <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
         <maven-surefire-plugin.version>2.7.1</maven-surefire-plugin.version>
+        <maven-logback.version>1.2.3</maven-logback.version>
+        <maven-slf4j.version>1.7.25</maven-slf4j.version>
 
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
@@ -182,7 +184,7 @@
             <dependency>
                 <groupId>com.chenkuojun</groupId>
                 <artifactId>my-tomcat-core-server</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.1</version>
             </dependency>
 
             <dependency>
@@ -190,6 +192,17 @@
                 <artifactId>jakarta.servlet-api</artifactId>
                 <version>${jakarta.servlet-api.version}</version>
                 <scope>compile</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${maven-logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${maven-slf4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -20,6 +20,4 @@ public final class Bootstrap {
     HttpConnector connector = new HttpConnector(servletMap);
     connector.start();
   }
-
-
 }

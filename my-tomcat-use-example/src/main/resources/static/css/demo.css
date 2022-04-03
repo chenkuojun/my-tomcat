@@ -1,0 +1,18 @@
+html    /*TagName*/
+{
+    overflow:hidden;
+}
+#div1    /*id*/
+{
+    width: 420px;
+    height: 580px;
+    white-space: nowrap;
+    background-color:#E71010DD;
+    color:black;
+    font-size:12px;
+    font-family:Arial,sans-serif;
+}
+.xx     /*class*/
+{
+    background-color:#E71010DD
+}

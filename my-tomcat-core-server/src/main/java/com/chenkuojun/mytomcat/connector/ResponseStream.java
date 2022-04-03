@@ -2,11 +2,15 @@ package com.chenkuojun.mytomcat.connector;
 
 import com.chenkuojun.mytomcat.connector.http.HttpResponse;
 import com.chenkuojun.mytomcat.utils.HttpProtocolUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 
 /**
  * Convenience implementation of <b>ServletOutputStream</b> that works with
@@ -19,6 +23,7 @@ import java.io.OutputStream;
  * @deprecated
  */
 
+@Slf4j
 public class ResponseStream extends ServletOutputStream {
 
 
@@ -79,7 +84,7 @@ public class ResponseStream extends ServletOutputStream {
     /**
      * The underlying output stream to which we should write data.
      */
-    protected OutputStream stream = null;
+    protected OutputStream stream;
 
 
     // ------------------------------------------------------------- Properties
@@ -163,9 +168,13 @@ public class ResponseStream extends ServletOutputStream {
 
     @Override
     public void write(byte b[], int off, int len) throws IOException {
-
-        stream.write(HttpProtocolUtil.getHttp200(len).getBytes());
+        //sb.append(b);
+        //log.info("{}",getChars(b));
+        this.response.sendHeaders();
+        //stream.write(HttpProtocolUtil.getHttp200(len).getBytes());
         stream.write(b, off, len);
+
+
 //        if (closed)
 //            throw new IOException("responseStream.write.closed");
 //
@@ -210,6 +219,23 @@ public class ResponseStream extends ServletOutputStream {
     @Override
     public void setWriteListener(WriteListener writeListener) {
 
+    }
+
+    public byte[] getBytes(char[] chars) {
+        Charset cs = Charset.forName("UTF-8");
+        CharBuffer cb = CharBuffer.allocate(chars.length);
+        cb.put(chars);
+        cb.flip();
+        ByteBuffer bb = cs.encode(cb);
+        return bb.array();
+    }
+    public char[] getChars(byte[] bytes) {
+        Charset cs = Charset.forName("UTF-8");
+        ByteBuffer bb = ByteBuffer.allocate(bytes.length);
+        bb.put(bytes);
+        bb.flip();
+        CharBuffer cb = cs.decode(bb);
+        return cb.array();
     }
 }
 

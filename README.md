@@ -10,6 +10,7 @@ example 为demo ,替换掉springboot内置的tomcat,
 在springboot中启动方法ServletWebServerFactory#getWebServer#initialize  ,
 所有我们替换掉tomcat用自己的方法，也需要加载bean，调用启动方法，springboot 内部只提供了三种(tomcat,jetty,undlow)的启动配置，所以这个启动加载的过程只能我们自己做了
 
+目前版本框架支持freemark页面的解析
 SNAPSHOT 版本依赖
 ~~~
 <dependency>

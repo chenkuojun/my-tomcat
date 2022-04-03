@@ -408,7 +408,7 @@ public class HttpRequest implements HttpServletRequest {
   }
 
   public Locale getLocale() {
-    return null;
+    return Locale.SIMPLIFIED_CHINESE;
   }
 
   public Enumeration getLocales() {
@@ -503,7 +503,7 @@ public class HttpRequest implements HttpServletRequest {
 
   @Override
   public ServletContext getServletContext() {
-    return null;
+    return new ApplicationContextFacade();
   }
 
   @Override

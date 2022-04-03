@@ -10,7 +10,7 @@ package com.chenkuojun.mytomcat.connector.http;
  * @deprecated
  */
 
-final class HttpRequestLine {
+public final class HttpRequestLine {
 
 
     // -------------------------------------------------------------- Constants

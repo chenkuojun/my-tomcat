@@ -1,5 +1,6 @@
 package com.chenkuojun.mytomcat.connector.http;
 
+import com.chenkuojun.mytomcat.connector.OutputBuffer;
 import com.chenkuojun.mytomcat.connector.ResponseStream;
 import com.chenkuojun.mytomcat.connector.ResponseWriter;
 import com.chenkuojun.mytomcat.constant.Constants;
@@ -9,6 +10,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -204,7 +206,7 @@ public class HttpResponse implements HttpServletResponse {
    * Send the HTTP response headers, if this has not already occurred.
    *  @throws IOException ioException
    */
-  protected void sendHeaders() throws IOException {
+  public void sendHeaders() throws IOException {
     if (isCommitted())
       return;
     // Prepare a suitable output writer
@@ -232,6 +234,7 @@ public class HttpResponse implements HttpServletResponse {
     if (getContentLength() >= 0) {
       outputWriter.print("Content-Length: " + getContentLength() + "\r\n");
     }
+
     // Send all specified headers (if any)
     synchronized (headers) {
       Iterator names = headers.keySet().iterator();
@@ -303,7 +306,6 @@ public class HttpResponse implements HttpServletResponse {
       // PrintStream 用来操作字节流，PrintWriter 用来操作字符流  此处有图片，所以用字节流处理，网上有说可以PrintWriter也可以，回头研究
       PrintStream printStream = new PrintStream(output);
       printStream.println("HTTP/1.0 200 OK");// 返回应答消息,并结束应答
-      printStream.println("Content-Type:text/html");
       printStream.println("Content-Length:" + file.length());// 返回内容字节数
       printStream.println();// 根据 HTTP 协议, 空行将结束头信息
       int ch = fis.read(bytes, 0, BUFFER_SIZE);
@@ -446,13 +448,13 @@ public class HttpResponse implements HttpServletResponse {
 
   public String getCharacterEncoding() {
     if (encoding == null)
-      return ("ISO-8859-1");
+      return ("UTF-8");
     else
       return (encoding);
   }
 
   public Locale getLocale() {
-    return null;
+    return Locale.SIMPLIFIED_CHINESE;
   }
 
   public ServletOutputStream getOutputStream() throws IOException {
@@ -464,7 +466,8 @@ public class HttpResponse implements HttpServletResponse {
     newStream.setCommit(false);
     OutputStreamWriter osr =
       new OutputStreamWriter(newStream, getCharacterEncoding());
-    writer = new ResponseWriter(osr);
+    //OutputBuffer outputBuffer = new OutputBuffer();
+    writer = new ResponseWriter(osr,newStream);
     return writer;
   }
 

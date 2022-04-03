@@ -17,6 +17,7 @@ public class HttpProtocolUtil {
         return "HTTP/1.1 200 OK\r\n" +
                 "Content-Type: text/html\r\n" +
                 "Content-Length: " + contentLength + "\r\n" +
+                "Content-Language: zh-CN" + "\r\n" +
                 "\r\n";
     }
 

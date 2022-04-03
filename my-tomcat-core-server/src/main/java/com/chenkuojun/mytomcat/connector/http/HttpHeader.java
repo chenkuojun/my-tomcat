@@ -8,7 +8,7 @@ package com.chenkuojun.mytomcat.connector.http;
  * @deprecated
  */
 
-final class HttpHeader {
+public final class HttpHeader {
 
 
     // -------------------------------------------------------------- Constants

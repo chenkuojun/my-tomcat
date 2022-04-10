@@ -1,19 +1,27 @@
 package com.chenkuojun.mytomcat.connector.http;
 
+import com.chenkuojun.mytomcat.connector.CharChunk;
 import com.chenkuojun.mytomcat.connector.OutputBuffer;
 import com.chenkuojun.mytomcat.connector.ResponseStream;
 import com.chenkuojun.mytomcat.connector.ResponseWriter;
 import com.chenkuojun.mytomcat.constant.Constants;
 import com.chenkuojun.mytomcat.utils.CookieTools;
+import com.chenkuojun.mytomcat.utils.UriUtil;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.naming.Context;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+@Slf4j
 public class HttpResponse implements HttpServletResponse {
 
   // the default buffer size
@@ -68,6 +76,29 @@ public class HttpResponse implements HttpServletResponse {
    * The HTTP status code associated with this Response.
    */
   protected int status = HttpServletResponse.SC_OK;
+
+  protected static final int SC_FOUND = 302;
+
+
+  /**
+   * Recyclable buffer to hold the redirect URL.
+   */
+  protected final CharChunk redirectURLCC = new CharChunk();
+
+  /**
+   * The included flag.
+   */
+  protected boolean included = false;
+
+  protected boolean appCommitted = false;
+
+  public void setAppCommitted(boolean appCommitted) {
+    this.appCommitted = appCommitted;
+  }
+
+  public boolean isAppCommitted() {
+    return this.appCommitted || isCommitted() || ((getContentLength() > 0));
+  }
 
 
 
@@ -251,26 +282,6 @@ public class HttpResponse implements HttpServletResponse {
         }
       }
     }
-    // Add the session ID cookie if necessary
-/*    HttpServletRequest hreq = (HttpServletRequest) request.getRequest();
-    HttpSession session = hreq.getSession(false);
-    if ((session != null) && session.isNew() && (getContext() != null)
-      && getContext().getCookies()) {
-      Cookie cookie = new Cookie("JSESSIONID", session.getId());
-      cookie.setMaxAge(-1);
-      String contextPath = null;
-      if (context != null)
-        contextPath = context.getPath();
-      if ((contextPath != null) && (contextPath.length() > 0))
-        cookie.setPath(contextPath);
-      else
-
-      cookie.setPath("/");
-      if (hreq.isSecure())
-        cookie.setSecure(true);
-      addCookie(cookie);
-    }
-*/
     // Send all specified cookies (if any)
     synchronized (cookies) {
       Iterator items = cookies.iterator();
@@ -496,6 +507,29 @@ public class HttpResponse implements HttpServletResponse {
   }
 
   public void sendRedirect(String location) throws IOException {
+    setAppCommitted(true);
+    sendRedirect(location, SC_FOUND);
+  }
+
+  /**
+   * Internal method that allows a redirect to be sent with a status other
+   * than {@link HttpServletResponse#SC_FOUND} (302). No attempt is made to
+   * validate the status code.
+   *
+   * @param location Location URL to redirect to
+   * @param status HTTP status code that will be sent
+   * @throws IOException an IO exception occurred
+   */
+  public void sendRedirect(String location, int status) {
+    if (isCommitted()) {
+      throw new IllegalStateException("coyoteResponse.sendRedirect.ise");
+    }
+    if (included) {
+      return;
+    }
+    String locationUri = toAbsolute(location);
+    setStatus(status);
+    setHeader("Location", locationUri);
   }
 
   public void setBufferSize(int size) {
@@ -582,14 +616,25 @@ public class HttpResponse implements HttpServletResponse {
   }
 
   public void setStatus(int sc) {
+    setStatus(sc, null);
   }
 
   public void setStatus(int sc, String message) {
+    if (isCommitted()) {
+      return;
+    }
+
+    // Ignore any call from an included servlet
+    if (included) {
+      return;
+    }
+    this.status = sc;
+    this.message = message;
   }
 
   @Override
   public int getStatus() {
-    return 0;
+    return this.status;
   }
 
   @Override
@@ -616,5 +661,211 @@ public class HttpResponse implements HttpServletResponse {
   @Override
   public Collection<String> getHeaderNames() {
     return null;
+  }
+
+
+  /**
+   * Convert (if necessary) and return the absolute URL that represents the
+   * resource referenced by this possibly relative URL.  If this URL is
+   * already absolute, return it unchanged.
+   *
+   * @param location URL to be (possibly) converted and then returned
+   * @return the encoded URL
+   *
+   * @exception IllegalArgumentException if a MalformedURLException is
+   *  thrown when converting the relative URL to an absolute one
+   */
+  protected String toAbsolute(String location) {
+
+    if (location == null) {
+      return location;
+    }
+
+    boolean leadingSlash = location.startsWith("/");
+  //  StringBuffer sb = new StringBuffer();
+  //  if (location.startsWith("//")) {
+  //    // Add the scheme
+  //    String scheme = request.getScheme();
+  //    sb.append(scheme, 0, scheme.length());
+  //    sb.append(':');
+  //    sb.append(location, 0, location.length());
+  //    return sb.toString();
+  //  } else if (leadingSlash) {
+  //    String host = request.getHeader("host");
+  //    sb.append("http://", 0, "http://".length());
+  //    sb.append(host, 0, host.length());
+  //    sb.append(location, 0, location.length());
+  //    return sb.toString();
+  //
+  //  } else {
+  //
+  //    return location;
+  //
+  //  }
+  //
+  //}
+
+    if (location.startsWith("//")) {
+      // Scheme relative
+      redirectURLCC.recycle();
+      // Add the scheme
+      String scheme = request.getScheme();
+      try {
+        redirectURLCC.append(scheme, 0, scheme.length());
+        redirectURLCC.append(':');
+        redirectURLCC.append(location, 0, location.length());
+        return redirectURLCC.toString();
+      } catch (IOException e) {
+        throw new IllegalArgumentException(location, e);
+      }
+
+    } else if (leadingSlash || !UriUtil.hasScheme(location)) {
+
+      redirectURLCC.recycle();
+
+      int port = 8090;
+      String host = request.getHeader("host");
+      try {
+
+        redirectURLCC.append("http://", 0, "http://".length());
+        redirectURLCC.append(host, 0, host.length());
+        //if (port != 80 || port != 443) {
+        //  redirectURLCC.append(':');
+        //  String portS = port + "";
+        //  redirectURLCC.append(portS, 0, portS.length());
+        //}
+        //if (!leadingSlash) {
+        //  String relativePath = request.getDecodedRequestURI();
+        //  int pos = relativePath.lastIndexOf('/');
+        //  CharChunk encodedURI = null;
+        //  if (SecurityUtil.isPackageProtectionEnabled() ){
+        //    try{
+        //      encodedURI = AccessController.doPrivileged(
+        //              new PrivilegedEncodeUrl(urlEncoder, relativePath, pos));
+        //    } catch (PrivilegedActionException pae){
+        //      throw new IllegalArgumentException(location, pae.getException());
+        //    }
+        //  } else {
+        //    encodedURI = urlEncoder.encodeURL(relativePath, 0, pos);
+        //  }
+        //  redirectURLCC.append(encodedURI);
+        //  encodedURI.recycle();
+        //  redirectURLCC.append('/');
+        //}
+        redirectURLCC.append(location, 0, location.length());
+
+        normalize(redirectURLCC);
+      } catch (IOException e) {
+        throw new IllegalArgumentException(location, e);
+      }
+
+      return redirectURLCC.toString();
+
+    } else {
+
+      return location;
+
+    }
+  }
+
+
+  /**
+   * Removes /./ and /../ sequences from absolute URLs.
+   * Code borrowed heavily from CoyoteAdapter.normalize()
+   *
+   * @param cc the char chunk containing the chars to normalize
+   */
+  private void normalize(CharChunk cc) {
+    // Strip query string and/or fragment first as doing it this way makes
+    // the normalization logic a lot simpler
+    int truncate = cc.indexOf('?');
+    if (truncate == -1) {
+      truncate = cc.indexOf('#');
+    }
+    char[] truncateCC = null;
+    if (truncate > -1) {
+      truncateCC = Arrays.copyOfRange(cc.getBuffer(),
+              cc.getStart() + truncate, cc.getEnd());
+      cc.setEnd(cc.getStart() + truncate);
+    }
+
+    if (cc.endsWith("/.") || cc.endsWith("/..")) {
+      try {
+        cc.append('/');
+      } catch (IOException e) {
+        throw new IllegalArgumentException(cc.toString(), e);
+      }
+    }
+
+    char[] c = cc.getChars();
+    int start = cc.getStart();
+    int end = cc.getEnd();
+    int index = 0;
+    int startIndex = 0;
+
+    // Advance past the first three / characters (should place index just
+    // scheme://host[:port]
+
+    for (int i = 0; i < 3; i++) {
+      startIndex = cc.indexOf('/', startIndex + 1);
+    }
+
+    // Remove /./
+    index = startIndex;
+    while (true) {
+      index = cc.indexOf("/./", 0, 3, index);
+      if (index < 0) {
+        break;
+      }
+      copyChars(c, start + index, start + index + 2,
+              end - start - index - 2);
+      end = end - 2;
+      cc.setEnd(end);
+    }
+
+    // Remove /../
+    index = startIndex;
+    int pos;
+    while (true) {
+      index = cc.indexOf("/../", 0, 4, index);
+      if (index < 0) {
+        break;
+      }
+      // Can't go above the server root
+      if (index == startIndex) {
+        throw new IllegalArgumentException();
+      }
+      int index2 = -1;
+      for (pos = start + index - 1; (pos >= 0) && (index2 < 0); pos --) {
+        if (c[pos] == (byte) '/') {
+          index2 = pos;
+        }
+      }
+      copyChars(c, start + index2, start + index + 3,
+              end - start - index - 3);
+      end = end + index2 - index - 3;
+      cc.setEnd(end);
+      index = index2;
+    }
+
+    // Add the query string and/or fragment (if present) back in
+    if (truncateCC != null) {
+      try {
+        cc.append(truncateCC, 0, truncateCC.length);
+      } catch (IOException ioe) {
+        throw new IllegalArgumentException(ioe);
+      }
+    }
+  }
+
+  private void copyChars(char[] c, int dest, int src, int len) {
+    System.arraycopy(c, src, c, dest, len);
+  }
+
+
+  public void setCommitted(boolean committed) {
+
+    this.committed = committed;
+
   }
 }

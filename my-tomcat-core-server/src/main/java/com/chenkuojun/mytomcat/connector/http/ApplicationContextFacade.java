@@ -64,7 +64,7 @@ public class ApplicationContextFacade implements ServletContext {
 
     @Override
     public RequestDispatcher getRequestDispatcher(String path) {
-        return null;
+        return new ApplicationDispatcher();
     }
 
     @Override

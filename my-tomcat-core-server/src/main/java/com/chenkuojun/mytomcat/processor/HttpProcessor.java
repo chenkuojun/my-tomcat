@@ -1,9 +1,7 @@
-package com.chenkuojun.mytomcat.thread;
+package com.chenkuojun.mytomcat.processor;
 
 
 import com.chenkuojun.mytomcat.connector.http.*;
-import com.chenkuojun.mytomcat.constant.Constants;
-import com.chenkuojun.mytomcat.processor.StaticResourceProcessor;
 import com.chenkuojun.mytomcat.utils.RequestUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,10 +9,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Slf4j
@@ -47,29 +43,14 @@ public class HttpProcessor extends Thread{
 
       // create HttpRequest object and parse
       request = new HttpRequest(input);
-      // 解析请求信息
-      //getByInputStreamInfo(input);
 
       // create HttpResponse object
       response = new HttpResponse(output);
-      response.setRequest(request);
       parseRequest(input, output);
       parseHeaders(input);
+      response.setRequest(request);
       String requestURI = request.getRequestURI();
       log.info("requestURI:{}",requestURI);
-      // 请求以 .html 或者 .htm 结尾，去static 下面去寻找对应的静态资源
-      //if(requestURI.endsWith(Constants.HTML) ||
-      //        requestURI.endsWith(Constants.HTM) ||
-      //        requestURI.endsWith(Constants.JPEG) ||
-      //        requestURI.endsWith(Constants.GIF) ||
-      //        requestURI.endsWith(Constants.PNG)){
-      //  StaticResourceProcessor processor = new StaticResourceProcessor();
-      //  processor.process(request, response);
-      //}else {
-      //  // 动态 servlet 处理
-      //  HttpServlet httpServlet = servletMap.get("/");
-      //  httpServlet.service(request, response);
-      //}
       // 动态 servlet 处理
       HttpServlet httpServlet = servletMap.get("/");
       httpServlet.service(request, response);
@@ -309,17 +290,6 @@ public class HttpProcessor extends Thread{
     // Return the normalized path that we have completed
     return (normalized);
 
-  }
-
-  private void getByInputStreamInfo(InputStream input) throws IOException {
-    byte[] bytes = new byte[1024];
-    int len;
-    StringBuilder requestRead = new StringBuilder();
-    if ((len = input.read(bytes)) != -1) {
-      requestRead.append(new String(bytes, 0, len, StandardCharsets.UTF_8));
-    }
-    String request = requestRead.toString();
-    log.info("request: \r\n{}", request);
   }
 
 }

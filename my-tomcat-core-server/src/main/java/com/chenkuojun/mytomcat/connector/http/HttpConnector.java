@@ -1,10 +1,8 @@
 package com.chenkuojun.mytomcat.connector.http;
 
-import com.chenkuojun.mytomcat.thread.HttpProcessor;
+import com.chenkuojun.mytomcat.processor.HttpProcessor;
 import com.chenkuojun.mytomcat.utils.YamlParseUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServlet;
 import java.io.IOException;
@@ -28,9 +26,6 @@ public class HttpConnector implements Runnable {
   private String host = "127.0.0.1";
   private final Map<String, HttpServlet> servletMap;
 
-  public String getScheme() {
-    return scheme;
-  }
   public HttpConnector(Map<String, HttpServlet> servletMap){
     this.servletMap = servletMap;
   }
@@ -70,8 +65,7 @@ public class HttpConnector implements Runnable {
   }
 
   private void loadProperties() {
-    log.info("my-tomcat is load properties");
-    port = YamlParseUtil.INSTANCE.getValueByKey("server.port") == null
+    log.info("my-tomcat is load properties");port = YamlParseUtil.INSTANCE.getValueByKey("server.port") == null
             ? port : (int) YamlParseUtil.INSTANCE.getValueByKey("server.port");
     log.info("【my-tomcat try starting with ip:{},and the port is:{}】", host,port);
     host = YamlParseUtil.INSTANCE.getValueByKey("server.host") == null

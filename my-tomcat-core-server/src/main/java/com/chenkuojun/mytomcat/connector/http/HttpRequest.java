@@ -10,17 +10,20 @@ import com.chenkuojun.mytomcat.connector.RequestStream;
 import com.chenkuojun.mytomcat.utils.Enumerator;
 import com.chenkuojun.mytomcat.utils.ParameterMap;
 import com.chenkuojun.mytomcat.utils.RequestUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
+@Slf4j
 public class HttpRequest implements HttpServletRequest {
 
   private String contentType;
@@ -37,6 +40,8 @@ public class HttpRequest implements HttpServletRequest {
   private boolean requestedSessionCookie;
   private String requestedSessionId;
   private boolean requestedSessionURL;
+
+  protected Object requestDispatcherPath = "/test/aaa";
 
   private String servletPath = "";
 
@@ -541,7 +546,7 @@ public class HttpRequest implements HttpServletRequest {
   }
 
   public String getRemoteHost() {
-    return null;
+    return "127.0.0.1";
   }
 
   public String getRemoteUser() {
@@ -549,7 +554,59 @@ public class HttpRequest implements HttpServletRequest {
   }
 
   public RequestDispatcher getRequestDispatcher(String path) {
-    return null;
+    ServletContext context = getServletContext();
+    if (context == null) {
+      return null;
+    }
+
+    if (path == null) {
+      return null;
+    }
+
+    int fragmentPos = path.indexOf('#');
+    if (fragmentPos > -1) {
+      log.warn("request.fragmentInDispatchPath", path);
+      path = path.substring(0, fragmentPos);
+    }
+
+    // If the path is already context-relative, just pass it through
+    if (path.startsWith("/")) {
+      return context.getRequestDispatcher(path);
+    }
+    // Convert a request-relative path to a context-relative one
+    String servletPath = (String) getAttribute(
+            RequestDispatcher.INCLUDE_SERVLET_PATH);
+    if (servletPath == null) {
+      servletPath = getServletPath();
+    }
+
+    // Add the path info, if there is any
+    String pathInfo = getPathInfo();
+    String requestPath = null;
+
+    if (pathInfo == null) {
+      requestPath = servletPath;
+    } else {
+      requestPath = servletPath + pathInfo;
+    }
+
+    int pos = requestPath.lastIndexOf('/');
+    String relative;
+    if (true) {
+      if (pos >= 0) {
+        relative = URLEncoder.encode(requestPath.substring(0, pos + 1),StandardCharsets.UTF_8) + path;
+      } else {
+        relative = URLEncoder.encode(requestPath, StandardCharsets.UTF_8) + path;
+      }
+    } else {
+      if (pos >= 0) {
+        relative = requestPath.substring(0, pos + 1) + path;
+      } else {
+        relative = requestPath + path;
+      }
+    }
+
+    return context.getRequestDispatcher(relative);
   }
 
   public String getScheme() {

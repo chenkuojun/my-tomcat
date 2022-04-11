@@ -1,3 +1,6 @@
 server:
   host: 127.0.0.1
-  port: 8888
+  port: 8090
+
+mytomcat:
+  iotype: NIO # NIO,BIO,默认NIO

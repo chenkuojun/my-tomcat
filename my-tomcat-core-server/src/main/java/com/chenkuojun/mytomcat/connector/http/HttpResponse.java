@@ -530,6 +530,7 @@ public class HttpResponse implements HttpServletResponse {
     String locationUri = toAbsolute(location);
     setStatus(status);
     setHeader("Location", locationUri);
+    this.committed = true;
   }
 
   public void setBufferSize(int size) {

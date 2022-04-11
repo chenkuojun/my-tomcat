@@ -20,9 +20,6 @@ import java.util.Map;
 @Slf4j
 public class PageDemoController {
 
-    @Value("${server.port}")
-    private int port;
-
     @RequestMapping("/bbb")
     public void HelloWorld (HttpServletResponse response) throws IOException {
         response.sendRedirect("/test/aaa");
@@ -35,7 +32,6 @@ public class PageDemoController {
 
     @RequestMapping("/aaa")
     public String fmIndex(ModelMap modelMap) {
-        log.info("{}",port);
         Map<String, String> map = new HashMap<>();
 
         map.put("name", "aoppp");

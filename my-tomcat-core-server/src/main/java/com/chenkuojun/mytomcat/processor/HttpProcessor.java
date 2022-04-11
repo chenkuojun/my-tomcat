@@ -54,6 +54,10 @@ public class HttpProcessor extends Thread{
       // 动态 servlet 处理
       HttpServlet httpServlet = servletMap.get("/");
       httpServlet.service(request, response);
+      // 处理完流程往写数
+      if(response.isCommitted()){
+        response.finishResponse();
+      }
       socket.close();
     }
     catch (Exception e) {
@@ -131,6 +135,7 @@ public class HttpProcessor extends Thread{
 
     // Parse the incoming request line
     input.readRequestLine(requestLine);
+    log.info("请求requestLine:{}",requestLine);
     String method =
       new String(requestLine.method, 0, requestLine.methodEnd);
     String uri = null;

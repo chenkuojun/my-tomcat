@@ -12,8 +12,6 @@ import java.nio.CharBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 /**
  * Convenience implementation of <b>ServletOutputStream</b> that works with
@@ -83,12 +81,6 @@ public class NioResponseStream extends ServletOutputStream {
      */
     protected NioHttpResponse response;
 
-
-    /**
-     * The underlying output stream to which we should write data.
-     */
-    protected OutputStream stream;
-
     protected SelectionKey selectionKey;
 
 
@@ -139,8 +131,9 @@ public class NioResponseStream extends ServletOutputStream {
   public void flush() throws IOException {
     if (closed)
             throw new IOException("responseStream.flush.closed");
-       //if (commit)
-            //response.flushBuffer();
+      commit = true;
+       if (commit)
+            response.flushBuffer();
 
     }
 
@@ -159,8 +152,6 @@ public class NioResponseStream extends ServletOutputStream {
 
         if ((length > 0) && (count >= length))
             throw new IOException("responseStream.write.count");
-
-        stream.write(b);
         count++;
 
     }
@@ -173,18 +164,24 @@ public class NioResponseStream extends ServletOutputStream {
 
     @Override
     public void write(byte b[], int off, int len) throws IOException {
-        StringBuffer stringBuffer = this.response.sendHeaders();
+        //StringBuffer stringBuffer = this.response.sendHeaders();
 
-        @Cleanup("flip") ByteBuffer head = ByteBuffer.wrap(stringBuffer.toString().getBytes());
+        //@Cleanup("flip") ByteBuffer head = ByteBuffer.wrap(stringBuffer.toString().getBytes());
         @Cleanup("flip") ByteBuffer bf = ByteBuffer.wrap(b);
+        log.info("capcity:{}",bf.capacity());
         @Cleanup SocketChannel channel = (SocketChannel) selectionKey.channel(); //  从契约获取通道
-        //向通道中写入数据
-        channel.write(head);
-        int write = channel.write(bf);
-        if (write == -1) {
-            selectionKey.cancel();
+        if(channel.isConnected()){
+            //向通道中写入数据
+            //int header = channel.write(head);
+            //log.info("header:{}",header);
+            int body = channel.write(bf);
+            log.info("body:{}",body);
+            //if (write == -1) {
+            //    selectionKey.cancel();
+            //}
+        }else {
+            log.info("通道已经关闭了");
         }
-        selectionKey.cancel();
 
     }
 

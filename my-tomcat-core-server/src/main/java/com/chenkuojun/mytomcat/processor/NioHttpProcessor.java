@@ -1,6 +1,5 @@
 package com.chenkuojun.mytomcat.processor;
 
-import com.chenkuojun.mytomcat.connector.niohttp.NioHttpConnector;
 import com.chenkuojun.mytomcat.connector.niohttp.NioHttpRequest;
 import com.chenkuojun.mytomcat.connector.niohttp.NioHttpResponse;
 import lombok.SneakyThrows;
@@ -32,11 +31,12 @@ public class NioHttpProcessor{
         ConcurrentLinkedQueue<NioHttpRequest> requestList = new ConcurrentLinkedQueue<>();
         ConcurrentLinkedQueue<NioHttpResponse> responseList = new ConcurrentLinkedQueue<>();
         while (true) {
+            selector.select(5000);
             //等待数据,没有人发送请求连接可以做其他事情,这里也是nio比普通bio的优势所在，简单来说不用一直等待连接，可以做其他的工作。
-            if(selector.select(5000) == 0){
-                log.info("【my-tomcat-server】: 暂时没有连接请求，等待中....");
-                continue;
-            }
+            //if(selector.select(5000) == 0){
+            //    log.info("【my-tomcat-server】: 暂时没有连接请求，等待中....");
+            //    continue;
+            //}
             //获取监听器的所有事件并进行业务处理
             Set<SelectionKey> selectionKeys = selector.selectedKeys();
             Iterator<SelectionKey> iterator = selectionKeys.iterator();
@@ -59,6 +59,8 @@ public class NioHttpProcessor{
                     }
                     //等待请求和响应都准备好的时候进行处理
                     if (!requestList.isEmpty() && !responseList.isEmpty()) {
+                        // 处理过程中，先取消selector对应连接的注册，避免重复
+                        next.cancel();
                         // 动态 servlet 处理
                         HttpServlet httpServlet = servletMap.get("/");
                         httpServlet.service(requestList.poll(), responseList.poll());
@@ -69,6 +71,8 @@ public class NioHttpProcessor{
                     log.info("{}",e);
                 }
             }
+            // 检查过程就绪,清除之前的调用效果
+            selector.selectNow();
         }
     }
 

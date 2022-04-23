@@ -1,9 +1,7 @@
 package com.chenkuojun.mytomcat.connector.niohttp;
 
-import com.chenkuojun.mytomcat.connector.ResponseStream;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
-
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -395,7 +393,10 @@ public class NioHttpResponse implements HttpServletResponse {
 
   @Override
   public void flushBuffer() throws IOException {
-
+    StringBuffer stringBuffer = sendHeaders();
+    @Cleanup("flip") ByteBuffer head = ByteBuffer.wrap(stringBuffer.toString().getBytes());
+    @Cleanup SocketChannel channel = (SocketChannel) selectionKey.channel(); //  从契约获取通道
+    int body = channel.write(head);
   }
 
   @Override
@@ -440,7 +441,7 @@ public class NioHttpResponse implements HttpServletResponse {
    * Send the HTTP response headers, if this has not already occurred.
    *  @throws IOException ioException
    */
-  public StringBuffer sendHeaders() throws IOException {
+  public StringBuffer sendHeaders(){
     if (isCommitted())
       return null;
     StringBuffer httpResponse = new StringBuffer();
@@ -458,10 +459,6 @@ public class NioHttpResponse implements HttpServletResponse {
     }
     if (getContentLength() >= 0) {
       httpResponse.append("Content-Length: " + getContentLength() + "\r\n");
-    }
-    if(this.getRequest().getRequestURI().equals("/images/1.jpg")){
-      httpResponse.append("Last-Modified: " + new Date());
-      httpResponse.append("\r\n");
     }
     // Send all specified headers (if any)
     synchronized (headers) {

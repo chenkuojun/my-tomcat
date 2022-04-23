@@ -10,7 +10,7 @@
 </head>
 
 <body>
-<img src="/images/1.jpg">
+<#--<img src="/images/1.jpg">-->
 <h1>dhsajdhkjks</h1>
 <span>desc ===</span><span class="xx"> ${user.desc} </span>
 </body>

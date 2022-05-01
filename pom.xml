@@ -58,7 +58,7 @@
         <maven-surefire-plugin.version>2.7.1</maven-surefire-plugin.version>
         <maven-logback.version>1.2.3</maven-logback.version>
         <maven-slf4j.version>1.7.25</maven-slf4j.version>
-
+        <netty.version>4.1.6.Final</netty.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
@@ -203,6 +203,12 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${maven-slf4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

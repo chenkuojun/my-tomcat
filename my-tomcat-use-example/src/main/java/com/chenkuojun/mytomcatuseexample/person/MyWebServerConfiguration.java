@@ -1,17 +1,23 @@
 package com.chenkuojun.mytomcatuseexample.person;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.web.embedded.undertow.UndertowBuilderCustomizer;
-import org.springframework.boot.web.embedded.undertow.UndertowDeploymentInfoCustomizer;
+import com.chenkuojun.mytomcat.connector.nettyhttp.config.NettyContainerConfig;
+import com.chenkuojun.mytomcat.connector.nettyhttp.container.NettyEmbeddedServletContainerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MyWebServerConfiguration {
+    //@Bean
+    //MyServletWebServerFactory myServletWebServerFactory(
+    //        ObjectProvider<UndertowDeploymentInfoCustomizer> deploymentInfoCustomizers,
+    //        ObjectProvider<UndertowBuilderCustomizer> builderCustomizers) {
+    //    return new MyServletWebServerFactory();
+    //}
+
     @Bean
-    MyServletWebServerFactory myServletWebServerFactory(
-            ObjectProvider<UndertowDeploymentInfoCustomizer> deploymentInfoCustomizers,
-            ObjectProvider<UndertowBuilderCustomizer> builderCustomizers) {
-        return new MyServletWebServerFactory();
+    public NettyEmbeddedServletContainerFactory servletContainer(){
+        NettyContainerConfig nettyContainerConfig = NettyContainerConfig.builder().build();
+        NettyEmbeddedServletContainerFactory factory = new NettyEmbeddedServletContainerFactory(nettyContainerConfig);
+        return factory;
     }
 }

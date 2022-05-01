@@ -3,4 +3,4 @@ server:
   port: 8090
 
 mytomcat:
-  iotype: NIO # NIO,BIO,默认NIO
+  iotype: BIO # NIO,BIO,默认NIO

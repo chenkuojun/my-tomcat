@@ -1,12 +1,14 @@
-package com.chenkuojun.mytomcatuseexample.person;
+package com.chenkuojun.mytomcat.connector.http.context;
 
+import com.chenkuojun.mytomcat.connector.http.config.MyServletConfig;
+import com.chenkuojun.mytomcat.connector.http.dispatcher.MyRequestDispatcher;
 import com.chenkuojun.mytomcat.startup.Bootstrap;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.util.WebUtils;
-
 import javax.servlet.*;
 import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpServlet;
@@ -16,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
+@Slf4j
 public class MyServletContext implements ServletContext {
     private final Map<String, String> initParameters = new LinkedHashMap<>();
 
@@ -37,7 +40,7 @@ public class MyServletContext implements ServletContext {
 
     public static final String TEMP_DIR_CONTEXT_ATTRIBUTE = "javax.servlet.context.tempdir";
 
-    public  Bootstrap bootStrap;
+    public Bootstrap bootStrap;
 
 
 

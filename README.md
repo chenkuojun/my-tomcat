@@ -20,6 +20,17 @@ SNAPSHOT 版本依赖
 </dependency>
 ~~~
 
+引用包时需要在启动类添加:
+~~~java
+
+    @Bean
+    MyServletWebServerFactory myServletWebServerFactory(
+            ObjectProvider<UndertowDeploymentInfoCustomizer> deploymentInfoCustomizers,
+            ObjectProvider<UndertowBuilderCustomizer> builderCustomizers) {
+        return new MyServletWebServerFactory();
+    }
+~~~
+
 升级了jdk版本11
 ~~~
 # 打包命令

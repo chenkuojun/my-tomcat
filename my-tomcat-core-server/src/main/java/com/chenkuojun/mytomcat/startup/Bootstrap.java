@@ -2,6 +2,7 @@ package com.chenkuojun.mytomcat.startup;
 
 
 import com.chenkuojun.mytomcat.connector.http.HttpConnector;
+import com.chenkuojun.mytomcat.connector.nettyhttp1.NettyHttpConnector;
 import com.chenkuojun.mytomcat.connector.niohttp.NioHttpConnector;
 import com.chenkuojun.mytomcat.utils.YamlParseUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -18,15 +19,12 @@ public final class Bootstrap {
   public void registerServlet(String urlPattern, HttpServlet servlet) {
     servletMap.put(urlPattern, servlet);
   }
-  public static void main(String[] args) {
-    start();
-  }
   public static void start() {
     // 获取配置文件
     loadIOType();
     if(IO_TYPE.equals("NIO")){
-      NioHttpConnector connector = new NioHttpConnector(servletMap);
-      //connector.start();
+      //NioHttpConnector connector = new NioHttpConnector(servletMap);
+      NettyHttpConnector connector = new NettyHttpConnector(servletMap);
       connector.run();
     }else {
       HttpConnector connector = new HttpConnector(servletMap);

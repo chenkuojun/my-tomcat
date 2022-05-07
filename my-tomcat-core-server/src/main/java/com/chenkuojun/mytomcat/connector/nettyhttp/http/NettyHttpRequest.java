@@ -1,26 +1,22 @@
-package com.chenkuojun.mytomcat.connector.niohttp;
+package com.chenkuojun.mytomcat.connector.nettyhttp.http;
 
-/** this class copies methods from org.apache.catalina.connector.HttpRequestBase
- *  and org.apache.catalina.connector.http.HttpRequestImpl.
- *  The HttpRequestImpl class employs a pool of HttpHeader objects for performance
- *  These two classes will be explained in Chapter 4.
- */
 
 import com.chenkuojun.mytomcat.connector.http.ApplicationContextFacade;
+import com.chenkuojun.mytomcat.init.dispatcher.MyRequestDispatcher;
 import com.chenkuojun.mytomcat.utils.Enumerator;
 import com.chenkuojun.mytomcat.utils.ParameterMap;
 import com.chenkuojun.mytomcat.utils.RequestUtil;
-import lombok.Cleanup;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
+
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URLEncoder;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.text.ParseException;
@@ -28,7 +24,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Slf4j
-public class NioHttpRequest implements HttpServletRequest {
+public class NettyHttpRequest implements HttpServletRequest {
+  public static final String          DISPATCHER_TYPE = MyRequestDispatcher.class.getName() + ".DISPATCHER_TYPE";
+
   private String url;
   private String uri;
   private HashMap<String,String> param = new HashMap<>();
@@ -76,9 +74,9 @@ public class NioHttpRequest implements HttpServletRequest {
    * The set of SimpleDateFormat formats to use in getDateHeader().
    */
   protected SimpleDateFormat formats[] = {
-    new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US),
-    new SimpleDateFormat("EEEEEE, dd-MMM-yy HH:mm:ss zzz", Locale.US),
-    new SimpleDateFormat("EEE MMMM d HH:mm:ss yyyy", Locale.US)
+          new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US),
+          new SimpleDateFormat("EEEEEE, dd-MMM-yy HH:mm:ss zzz", Locale.US),
+          new SimpleDateFormat("EEE MMMM d HH:mm:ss yyyy", Locale.US)
   };
 
   /**
@@ -117,104 +115,27 @@ public class NioHttpRequest implements HttpServletRequest {
    */
   protected ServletInputStream stream = null;
 
-  public NioHttpRequest(SelectionKey selectionKey) throws IOException, ServletException {
-    //  从selectionKey获取通道
-    SocketChannel channel = (SocketChannel) selectionKey.channel();
-    String httpRequest = "";
-    @Cleanup("flip") ByteBuffer bb = ByteBuffer.allocate(16*1024);   //  从堆内存中获取内存
-    int length = 0; //  读取byte数组的长度
-    length = channel.read(bb);  //  从通道中读取数据到ByteBuffer容器中
-    if (length < 0){
-      selectionKey.cancel();  //  取消该契约
-    }else {
-      httpRequest = new String(bb.array()).trim();    //  将ByteBuffer转为String
-      //log.info("请求参数 -> {}",httpRequest);
-      parseRequest(httpRequest);
-      log.info("当前请求详情 -> {}",this);
-
-      // 解析请求
-
-    }
+  public NettyHttpRequest(FullHttpRequest request) {
+      parseRequest(request);
   }
 
-  private void parseRequest(String httpRequest) throws ServletException {
-    String httpHead = httpRequest.split("\n")[0];   //  获取请求头
-    url = httpHead.split("\\s")[1].split("\\?")[0]; //  获取请求路径
-    this.setUrl(url);
-    String path = httpHead.split("\\s")[1]; //  请求全路径，包含get的参数数据
-    method = httpHead.split("\\s")[0];
-    int index = httpRequest.indexOf("HTTP");
-    // 获取uri
-    uri = httpRequest.substring(3 + 1, index - 1);// 用index-1可以去掉连接中的空格
-    log.info("请求的url为:{}",url);
-    // 拆分get请求的参数数据
-    String[] params = path.indexOf("?") > 0 ? path.split("\\?")[1].split("\\&") : null;
-    if (params != null) {
-      try {
-        for (String tmp : params) {
-          param.put(tmp.split("\\=")[0], tmp.split("\\=")[1]);
-        }
-      } catch (NullPointerException e) {
-        e.printStackTrace();
-      }
+  private void parseRequest(FullHttpRequest request) {
+    String method = request.getMethod().name();
+    String uri = request.getUri();
+    String s = request.content().toString(CharsetUtil.UTF_8);
+    String protocol = request.getProtocolVersion().protocolName().toLowerCase();
+    HttpHeaders headers = request.headers();
+    log.info("headers:{}",headers);
+    if (uri.endsWith("favicon.ico")) {
+      return ;
     }
-    String protocol = "http";
-
-    // Validate the incoming request line
-    if (method.length() < 1) {
-      throw new ServletException("Missing HTTP request method");
-    }
-
-
-    // Checking for an absolute URI (with the HTTP protocol)
-    if (!uri.startsWith("/")) {
-      int pos = uri.indexOf("://");
-      // Parsing out protocol and host name
-      if (pos != -1) {
-        pos = uri.indexOf('/', pos + 3);
-        if (pos == -1) {
-          uri = "";
-        } else {
-          uri = uri.substring(pos);
-        }
-      }
-    }
-
-    // Parse any requested session ID out of the request URI
-    String match = ";jsessionid=";
-    int semicolon = uri.indexOf(match);
-    if (semicolon >= 0) {
-      String rest = uri.substring(semicolon + match.length());
-      int semicolon2 = rest.indexOf(';');
-      if (semicolon2 >= 0) {
-        this.setRequestedSessionId(rest.substring(0, semicolon2));
-        rest = rest.substring(semicolon2);
-      } else {
-        this.setRequestedSessionId(rest);
-        rest = "";
-      }
-      this.setRequestedSessionURL(true);
-      uri = uri.substring(0, semicolon) + rest;
-    } else {
-      this.setRequestedSessionId(null);
-      this.setRequestedSessionURL(false);
-    }
-
-    // Normalize URI (using String operations at the moment)
-    String normalizedUri = normalize(uri);
-
-    // Set the corresponding request properties
-    this.setMethod(method);
-    this.setProtocol(protocol);
-    if (normalizedUri != null) {
-      this.setRequestURI(normalizedUri);
-    } else {
-      this.setRequestURI(uri);
-    }
-
-    if (normalizedUri == null) {
-      throw new ServletException("Invalid URI: " + uri + "'");
-    }
+    this.uri = uri;
+    this.url = uri;
+    this.method = method;
+    this.protocol = protocol;
+    this.setRequestedSessionId(null);
+    this.setRequestedSessionURL(false);
+    this.setRequestURI(this.uri);
   }
 
   public String getUrl(String url) {
@@ -324,7 +245,6 @@ public class NioHttpRequest implements HttpServletRequest {
     if (encoding == null)
       encoding = "ISO-8859-1";
 
-    // Parse any parameters specified in the query string
     String queryString = getQueryString();
     try {
       RequestUtil.parseParameters(results, queryString, encoding);
@@ -345,7 +265,7 @@ public class NioHttpRequest implements HttpServletRequest {
       contentType = contentType.trim();
     }
     if ("POST".equals(getMethod()) && (getContentLength() > 0)
-      && "application/x-www-form-urlencoded".equals(contentType)) {
+            && "application/x-www-form-urlencoded".equals(contentType)) {
       try {
         int max = getContentLength();
         int len = 0;
@@ -372,7 +292,6 @@ public class NioHttpRequest implements HttpServletRequest {
       }
     }
 
-    // Store the final results
     results.setLocked(true);
     parsed = true;
     parameters = results;
@@ -393,8 +312,8 @@ public class NioHttpRequest implements HttpServletRequest {
    * @exception IOException if an input/output error occurs
    * @return  ServletInputStream
    */
-  public ServletInputStream createInputStream() throws IOException {
-    return (new NioRequestStream(this));
+  public ServletInputStream createInputStream() {
+    return (new NettyRequestStream(this));
   }
 
   public InputStream getStream() {
@@ -656,8 +575,8 @@ public class NioHttpRequest implements HttpServletRequest {
       if (encoding == null)
         encoding = "ISO-8859-1";
       InputStreamReader isr =
-        new InputStreamReader(createInputStream(), encoding);
-        reader = new BufferedReader(isr);
+              new InputStreamReader(createInputStream(), encoding);
+      reader = new BufferedReader(isr);
     }
     return (reader);
   }
@@ -790,7 +709,7 @@ public class NioHttpRequest implements HttpServletRequest {
   }
 
   public String getScheme() {
-   return null;
+    return null;
   }
 
   public String getServerName() {
@@ -896,7 +815,7 @@ public class NioHttpRequest implements HttpServletRequest {
   }
 
   public void setAttribute(String key, Object value) {
-      this.attributes.put(key,value);
+    this.attributes.put(key,value);
   }
 
   /**

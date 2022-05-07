@@ -12,16 +12,6 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 
-/**
- * Convenience implementation of <b>ServletOutputStream</b> that works with
- * the standard ResponseBase implementation of <b>Response</b>.  If the content
- * length has been set on our associated Response, this implementation will
- * enforce not writing more than that many bytes on the underlying stream.
- *
- * @author Craig R. McClanahan
- * @version $Revision: 1.6 $ $Date: 2002/03/18 07:15:39 $
- * @deprecated
- */
 
 @Slf4j
 public class ResponseStream extends ServletOutputStream {

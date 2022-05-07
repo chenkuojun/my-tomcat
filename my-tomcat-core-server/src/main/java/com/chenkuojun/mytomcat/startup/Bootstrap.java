@@ -2,39 +2,41 @@ package com.chenkuojun.mytomcat.startup;
 
 
 import com.chenkuojun.mytomcat.connector.http.HttpConnector;
-import com.chenkuojun.mytomcat.connector.nettyhttp1.NettyHttpConnector;
-import com.chenkuojun.mytomcat.connector.niohttp.NioHttpConnector;
+import com.chenkuojun.mytomcat.init.context.MyServletContext;
+import com.chenkuojun.mytomcat.connector.nettyhttp.NettyHttpConnector;
 import com.chenkuojun.mytomcat.utils.YamlParseUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.servlet.http.HttpServlet;
-import java.util.HashMap;
-import java.util.Map;
+import javax.servlet.ServletContext;
+
 @Slf4j
 public final class Bootstrap {
-
-  private final static  Map<String, HttpServlet> servletMap = new HashMap<>();
+  private static ServletContext servletContext;
   // 默认NIO
   private static  String IO_TYPE = "NIO";
-  public void registerServlet(String urlPattern, HttpServlet servlet) {
-    servletMap.put(urlPattern, servlet);
-  }
   public static void start() {
     // 获取配置文件
-    loadIOType();
-    if(IO_TYPE.equals("NIO")){
+    String type = loadIOType();
+    if(IO_TYPE.equals(type)){
       //NioHttpConnector connector = new NioHttpConnector(servletMap);
-      NettyHttpConnector connector = new NettyHttpConnector(servletMap);
+      NettyHttpConnector connector = new NettyHttpConnector(servletContext);
       connector.run();
     }else {
-      HttpConnector connector = new HttpConnector(servletMap);
+      HttpConnector connector = new HttpConnector(servletContext);
       connector.start();
     }
   }
 
-  private static void loadIOType() {
-    IO_TYPE = YamlParseUtil.INSTANCE.getValueByKey("mytomcat.iotype") == null
-            ? IO_TYPE : (String)YamlParseUtil.INSTANCE.getValueByKey("mytomcat.iotype");
-    log.info("【my-tomcat starting IO TYPE is:{}】", IO_TYPE);
+  private static String loadIOType() {
+    return YamlParseUtil.INSTANCE.getValueByKey("my-tomcat.io-type") == null
+            ? IO_TYPE : (String)YamlParseUtil.INSTANCE.getValueByKey("my-tomcat.io-type");
+  }
+
+  public ServletContext getServletContext() {
+    return servletContext;
+  }
+
+  public void setServletContext(MyServletContext servletContext) {
+    this.servletContext = servletContext;
   }
 }

@@ -2,21 +2,21 @@ package com.chenkuojun.mytomcat.processor;
 
 
 import com.chenkuojun.mytomcat.connector.http.*;
+import com.chenkuojun.mytomcat.init.dispatcher.MyRequestDispatcher;
 import com.chenkuojun.mytomcat.utils.RequestUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServlet;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Map;
 
 @Slf4j
 public class HttpProcessor extends Thread{
 
-  private final Map<String, HttpServlet> servletMap;
+  private final ServletContext servletContext;
   /**
    * The HttpConnector with which this processor is associated.
    */
@@ -28,10 +28,10 @@ public class HttpProcessor extends Thread{
   private HttpRequestLine requestLine = new HttpRequestLine();
   private HttpResponse response;
 
-  public HttpProcessor(Socket socket,HttpConnector connector, Map<String, HttpServlet> servletMap) {
+  public HttpProcessor(Socket socket,HttpConnector connector, ServletContext servletContext) {
     this.socket = socket;
     this.connector = connector;
-    this.servletMap = servletMap;
+    this.servletContext = servletContext;
   }
   @Override
   public void run() {
@@ -52,8 +52,14 @@ public class HttpProcessor extends Thread{
       String requestURI = request.getRequestURI();
       log.info("requestURI:{}",requestURI);
       // 动态 servlet 处理
-      HttpServlet httpServlet = servletMap.get("/");
-      httpServlet.service(request, response);
+     MyRequestDispatcher dispatcher = (MyRequestDispatcher)
+              servletContext.getRequestDispatcher(requestURI);
+      if (dispatcher == null) {
+        //todo 报错
+      }
+      dispatcher.dispatch(request, response);
+      //HttpServlet httpServlet = servletMap.get("/");
+      //httpServlet.service(request, response);
       // 处理完流程往写数
       if(response.isCommitted()){
         response.finishResponse();

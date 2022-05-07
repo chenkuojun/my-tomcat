@@ -8,6 +8,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpUtil;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
@@ -22,13 +23,13 @@ public class HttpResponseOutputStream extends ServletOutputStream {
     private static final int               DEFAULT_BUFFER_SIZE = 1024 * 8;
 
     private final ChannelHandlerContext    ctx;
-    private final NettyHttpServletResponse servletResponse;
+    private final NettyHttpResponse servletResponse;
     private byte[]                         buf;
     private int                            count;
     private boolean                        closed;
     private WriteListener                  writeListener;
 
-    public HttpResponseOutputStream(ChannelHandlerContext ctx, NettyHttpServletResponse servletResponse) {
+    public HttpResponseOutputStream(ChannelHandlerContext ctx, NettyHttpResponse servletResponse) {
         this.ctx = ctx;
         this.servletResponse = servletResponse;
         this.buf = new byte[DEFAULT_BUFFER_SIZE];
@@ -42,8 +43,6 @@ public class HttpResponseOutputStream extends ServletOutputStream {
     @Override
     public void setWriteListener(WriteListener writeListener) {
         checkNotNull(writeListener);
-        // TODO ISE when called more than once
-        // TODO ISE when associated request is not async
     }
 
     @Override
@@ -104,7 +103,7 @@ public class HttpResponseOutputStream extends ServletOutputStream {
         if (lastContent) {
             HttpResponse nettyResponse = servletResponse.getNettyResponse();
             ChannelFuture future = ctx.write(DefaultLastHttpContent.EMPTY_LAST_CONTENT);
-            if (!HttpHeaders.isKeepAlive(nettyResponse)) {
+            if (!HttpUtil.isKeepAlive(nettyResponse)) {
                 future.addListener(ChannelFutureListener.CLOSE);
             }
         }
@@ -112,7 +111,6 @@ public class HttpResponseOutputStream extends ServletOutputStream {
 
     private void writeResponse(boolean lastContent) {
         HttpResponse response = servletResponse.getNettyResponse();
-        // TODO implement exceptions required by http://tools.ietf.org/html/rfc2616#section-4.4
         if (!HttpHeaders.isContentLengthSet(response)) {
             if (lastContent) {
                 HttpHeaders.setContentLength(response, count);

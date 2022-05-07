@@ -8,16 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 
-/**
- * Convenience implementation of <b>ServletInputStream</b> that works with
- * the standard implementations of <b>Request</b>.  If the content length has
- * been set on our associated Request, this implementation will enforce
- * not reading more than that many bytes on the underlying stream.
- *
- * @author Craig R. McClanahan
- * @version $Revision: 1.6 $ $Date: 2002/03/18 07:15:39 $
- * @deprecated
- */
 
 public class RequestStream extends ServletInputStream {
 

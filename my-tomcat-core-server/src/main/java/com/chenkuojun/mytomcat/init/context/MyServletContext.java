@@ -1,8 +1,13 @@
-package com.chenkuojun.mytomcat.connector.http.context;
+package com.chenkuojun.mytomcat.init.context;
 
-import com.chenkuojun.mytomcat.connector.http.config.MyServletConfig;
-import com.chenkuojun.mytomcat.connector.http.dispatcher.MyRequestDispatcher;
+import com.chenkuojun.mytomcat.connector.nettyhttp.utils.Utils;
+import com.chenkuojun.mytomcat.init.dispatcher.MyRequestDispatcher;
+import com.chenkuojun.mytomcat.init.dispatcher.SimpleFilterChain;
+import com.chenkuojun.mytomcat.init.registration.MyFilterRegistration;
+import com.chenkuojun.mytomcat.init.registration.MyServletRegistration;
 import com.chenkuojun.mytomcat.startup.Bootstrap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
@@ -11,18 +16,25 @@ import org.springframework.util.Assert;
 import org.springframework.web.util.WebUtils;
 import javax.servlet.*;
 import javax.servlet.descriptor.JspConfigDescriptor;
-import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.regex.Pattern;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 public class MyServletContext implements ServletContext {
     private final Map<String, String> initParameters = new LinkedHashMap<>();
 
     private final Map<String, Object> attributes = new LinkedHashMap<>();
+
+    private final Map<String, MyServletRegistration> servlets = Maps.newConcurrentMap();
+    private final Map<String, String> servletMappings =  Maps.newConcurrentMap();
+    private final Map<String, MyFilterRegistration> filters =  Maps.newConcurrentMap();
 
     private static final String COMMON_DEFAULT_SERVLET_NAME = "default";
 
@@ -34,24 +46,58 @@ public class MyServletContext implements ServletContext {
 
     private String contextPath = "";
 
-    private final Map<String, RequestDispatcher> namedRequestDispatchers = new HashMap<>();
-
     private static final String TEMP_DIR_SYSTEM_PROPERTY = "java.io.tmpdir";
-
-    public static final String TEMP_DIR_CONTEXT_ATTRIBUTE = "javax.servlet.context.tempdir";
 
     public Bootstrap bootStrap;
 
+    private volatile boolean initialised;
 
+    /**
+     * 构造函数
+     * @param resourceBasePath
+     * @param resourceLoader
+     * @param bootStrap
+     */
+    public MyServletContext(String resourceBasePath, @Nullable ResourceLoader resourceLoader, Bootstrap bootStrap) {
+        this.resourceLoader = (resourceLoader != null ? resourceLoader : new DefaultResourceLoader());
+        this.resourceBasePath = resourceBasePath;
+        this.bootStrap = bootStrap;
+        String tempDir = System.getProperty(TEMP_DIR_SYSTEM_PROPERTY);
+        if (tempDir != null) {
+            this.attributes.put(WebUtils.TEMP_DIR_CONTEXT_ATTRIBUTE, new File(tempDir));
+        }
+    }
 
     @Override
     public String getContextPath() {
         return this.contextPath;
     }
 
+    public void setInitialised(boolean initialised) {
+        this.initialised = initialised;
+    }
+
+    public boolean isInitialised() {
+        return initialised;
+    }
+
+    public void checkNotInitialised() {
+        checkState(!isInitialised(), "This method may not be called after the context has been initialised");
+    }
+
+    public void addServletMapping(String urlPattern, String name) {
+        checkNotInitialised();
+        servletMappings.put(urlPattern, checkNotNull(name));
+    }
+
+    public void addFilterMapping(EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String urlPattern) {
+        checkNotInitialised();
+        // TODO
+    }
+
     @Override
     public ServletContext getContext(String uripath) {
-        return null;
+        return this;
     }
 
     @Override
@@ -81,7 +127,7 @@ public class MyServletContext implements ServletContext {
 
     @Override
     public String getMimeType(String file) {
-        return null;
+        return Utils.getMimeType(file);
     }
 
     @Override
@@ -90,7 +136,7 @@ public class MyServletContext implements ServletContext {
     }
 
     @Override
-    public URL getResource(String path) throws MalformedURLException {
+    public URL getResource(String path) {
         return null;
     }
 
@@ -99,10 +145,54 @@ public class MyServletContext implements ServletContext {
         return null;
     }
 
+    public String getMatchingUrlPattern(String uri) {
+        int indx = uri.indexOf('?');
+
+        String path = indx != -1 ? uri.substring(0, indx) : uri.substring(0);
+        String _path = path;
+        if (!path.endsWith("/")) _path += "/";
+
+        for (Map.Entry<String, String> entry : servletMappings.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            Pattern pattern = Pattern.compile(key);
+            if (pattern.matcher(_path).matches()) {
+                String sanitizedUrlPattern = key.replaceAll("\\*", ".*");
+                if (sanitizedUrlPattern.endsWith("/")) {
+                    sanitizedUrlPattern = sanitizedUrlPattern.substring(0, sanitizedUrlPattern.length() - 1);
+                }
+                return sanitizedUrlPattern;
+            }
+        }
+        return path;
+    }
+
     @Override
     public RequestDispatcher getRequestDispatcher(String path) {
-        //
-        return null;
+        String servletName = servletMappings.get(path);
+        if (servletName == null) {
+            servletName = servletMappings.get("/");
+        }
+        Servlet servlet;
+        try {
+            servlet = null == servletName ? null : servlets.get(servletName).getServlet();
+            if (servlet == null) {
+                return null;
+            }
+            final List<Filter> filters = this.filters.values().stream()
+                    .map(nettyFilterRegistration -> {
+                        try {
+                            return nettyFilterRegistration.getFilter();
+                        } catch (ServletException e) {
+                            return null;
+                        }
+                    }).collect(toList());
+            FilterChain filterChain = new SimpleFilterChain(servlet, filters);
+            return new MyRequestDispatcher(this, filterChain);
+        } catch (ServletException e) {
+            log.info("{}",e);
+            throw new RuntimeException();
+        }
     }
 
     @Override
@@ -193,30 +283,6 @@ public class MyServletContext implements ServletContext {
         }
     }
 
-    public MyServletContext() {
-    }
-
-    public MyServletContext(String resourceBasePath, @Nullable ResourceLoader resourceLoader, Bootstrap bootStrap) {
-        this.resourceLoader = (resourceLoader != null ? resourceLoader : new DefaultResourceLoader());
-        this.resourceBasePath = resourceBasePath;
-        this.bootStrap = bootStrap;
-
-        // Use JVM temp dir as ServletContext temp dir.
-        String tempDir = System.getProperty(TEMP_DIR_SYSTEM_PROPERTY);
-        if (tempDir != null) {
-            this.attributes.put(WebUtils.TEMP_DIR_CONTEXT_ATTRIBUTE, new File(tempDir));
-        }
-
-        registerNamedDispatcher(this.defaultServletName, new MyRequestDispatcher(this.defaultServletName));
-    }
-
-
-    public void registerNamedDispatcher(String name, RequestDispatcher requestDispatcher) {
-        Assert.notNull(name, "RequestDispatcher name must not be null");
-        Assert.notNull(requestDispatcher, "RequestDispatcher must not be null");
-        this.namedRequestDispatchers.put(name, requestDispatcher);
-    }
-
     @Override
     public void removeAttribute(String name) {
 
@@ -227,31 +293,36 @@ public class MyServletContext implements ServletContext {
         return null;
     }
 
+    // 注册servlet
     @Override
     public ServletRegistration.Dynamic addServlet(String servletName, String className) {
-        return null;
+        return addServlet(servletName, className, null);
     }
 
     @Override
     public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet) {
-        //
-        if ("dispatcherServlet".equals(servletName)) {
-            servletName = "/";
-        }
-        bootStrap.registerServlet(servletName, (HttpServlet) servlet);
-        try {
-            servlet.init(new MyServletConfig(this));
-        } catch (ServletException e) {
-            e.printStackTrace();
-        }
-        System.out.println();
-        return null;
+        return addServlet(servletName, servlet.getClass().getName(), servlet);
     }
 
     @Override
     public ServletRegistration.Dynamic addServlet(String servletName, Class<? extends Servlet> servletClass) {
-        return null;
+        return addServlet(servletName, servletClass.getName());
     }
+
+    /**
+     * 自动装配servlet
+     * @param servletName
+     * @param className
+     * @param servlet
+     * @return
+     */
+    private ServletRegistration.Dynamic addServlet(String servletName, String className, Servlet servlet) {
+        MyServletRegistration servletRegistration = new MyServletRegistration(this, servletName, className,
+                servlet);
+        servlets.put(servletName, servletRegistration);
+        return servletRegistration;
+    }
+
 
     @Override
     public ServletRegistration.Dynamic addJspFile(String servletName, String jspFile) {
@@ -273,34 +344,41 @@ public class MyServletContext implements ServletContext {
         return null;
     }
 
+    // 注册Filter
     @Override
     public FilterRegistration.Dynamic addFilter(String filterName, String className) {
-        return null;
+        return addFilter(filterName, className, null);
     }
 
     @Override
     public FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
-        return null;
+        return addFilter(filterName, filter.getClass().getName(), filter);
     }
 
     @Override
     public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
-        return null;
+        return addFilter(filterName, filterClass.getName());
     }
 
+
+    private FilterRegistration.Dynamic addFilter(String filterName, String className, Filter filter) {
+        MyFilterRegistration filterRegistration = new MyFilterRegistration(this, filterName, className, filter);
+        filters.put(filterName, filterRegistration);
+        return filterRegistration;
+    }
     @Override
-    public <T extends Filter> T createFilter(Class<T> clazz) throws ServletException {
+    public <T extends Filter> T createFilter(Class<T> clazz) {
         return null;
     }
 
     @Override
     public FilterRegistration getFilterRegistration(String filterName) {
-        return null;
+        return filters.get(filterName);
     }
 
     @Override
     public Map<String, ? extends FilterRegistration> getFilterRegistrations() {
-        return null;
+        return ImmutableMap.copyOf(filters);
     }
 
     @Override
@@ -323,6 +401,7 @@ public class MyServletContext implements ServletContext {
         return null;
     }
 
+    // 注册Listener
     @Override
     public void addListener(String className) {
 
@@ -339,7 +418,7 @@ public class MyServletContext implements ServletContext {
     }
 
     @Override
-    public <T extends EventListener> T createListener(Class<T> clazz) throws ServletException {
+    public <T extends EventListener> T createListener(Class<T> clazz) {
         return null;
     }
 
@@ -350,7 +429,7 @@ public class MyServletContext implements ServletContext {
 
     @Override
     public ClassLoader getClassLoader() {
-        return null;
+        return this.resourceLoader.getClassLoader();
     }
 
     @Override

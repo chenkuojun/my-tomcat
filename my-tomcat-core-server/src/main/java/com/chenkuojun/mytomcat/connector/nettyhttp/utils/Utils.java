@@ -119,6 +119,9 @@ public class Utils {
     }
 
     public static String getMimeType(String fileUrl) {
+        if(fileUrl.endsWith(".css")){
+            return "text/css" ;
+        }
         FileNameMap fileNameMap = URLConnection.getFileNameMap();
         String type = fileNameMap.getContentTypeFor(fileUrl);
         return type;

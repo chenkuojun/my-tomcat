@@ -1,7 +1,7 @@
-package com.chenkuojun.mytomcat.connector.nettyhttp.registration;
+package com.chenkuojun.mytomcat.init.registration;
 
 
-import com.chenkuojun.mytomcat.connector.nettyhttp.context.NettyEmbeddedContext;
+import com.chenkuojun.mytomcat.init.context.MyServletContext;
 
 import javax.servlet.*;
 import java.util.Collection;
@@ -12,12 +12,12 @@ import java.util.Set;
 /**
  * @author chenkuojun
  */
-public class NettyServletRegistration extends AbstractNettyRegistration implements ServletRegistration.Dynamic {
+public class MyServletRegistration extends AbstractRegistration implements ServletRegistration.Dynamic {
 
     private volatile boolean initialised;
     private Servlet          servlet;
 
-    public NettyServletRegistration(NettyEmbeddedContext context, String servletName, String className, Servlet servlet) {
+    public MyServletRegistration(MyServletContext context, String servletName, String className, Servlet servlet) {
         super(servletName, className, context);
         this.servlet = servlet;
     }
@@ -63,9 +63,7 @@ public class NettyServletRegistration extends AbstractNettyRegistration implemen
 
     @Override
     public Set<String> addMapping(String... urlPatterns) {
-        // TODO check for conflicts
-
-        NettyEmbeddedContext context = getNettyContext();
+        MyServletContext context = getNettyContext();
         for (String urlPattern : urlPatterns) {
             context.addServletMapping(urlPattern, getName());
         }

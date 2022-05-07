@@ -15,6 +15,7 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
             ctx.channel().close();
         } else {
             ctx.pipeline().remove(this);
+            // 将消息传递给下一个处理器
             super.channelRead(ctx, msg);
         }
     }

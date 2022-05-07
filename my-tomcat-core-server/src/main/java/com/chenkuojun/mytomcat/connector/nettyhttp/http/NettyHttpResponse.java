@@ -1,23 +1,30 @@
-package com.chenkuojun.mytomcat.connector.niohttp;
+package com.chenkuojun.mytomcat.connector.nettyhttp.http;
 
-import lombok.Cleanup;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.net.MediaType;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-@Slf4j
-public class NioHttpResponse implements HttpServletResponse {
+import static com.google.common.base.Preconditions.checkState;
 
-  private SelectionKey selectionKey;
+@Slf4j
+public class NettyHttpResponse implements HttpServletResponse {
+  private static final String DEFAULT_CHARACTER_ENCODING = Charsets.UTF_8.name();
+  private static final Locale DEFAULT_LOCALE = Locale.SIMPLIFIED_CHINESE;
+
   private PrintWriter writer;
 
   /**
@@ -35,12 +42,12 @@ public class NioHttpResponse implements HttpServletResponse {
   protected final SimpleDateFormat format =
           new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz",Locale.US);
 
-  private NioHttpRequest request;
+  private NettyHttpRequest request;
 
   /**
    * The content type associated with this Response.
    */
-  protected String contentType = null;
+  protected String contentType;
 
   /**
    * The set of Cookies associated with this Response.
@@ -65,15 +72,23 @@ public class NioHttpResponse implements HttpServletResponse {
    */
   protected int status = HttpServletResponse.SC_OK;
 
+  private ChannelHandlerContext ctx;
 
+  private HttpResponse response;
 
+  private String characterEncoding = DEFAULT_CHARACTER_ENCODING;
 
-  public NioHttpResponse(SelectionKey selectionKey) {
-    this.selectionKey = selectionKey;
-  }
+  private HttpResponseOutputStream outputStream;
 
-  SelectionKey getSelectionKey(){
-    return this.selectionKey;
+  private boolean usingOutputStream;
+
+  private Locale locale;
+
+  public NettyHttpResponse(NettyHttpRequest request, ChannelHandlerContext ctx, HttpResponse response) {
+    this.request = request;
+    this.ctx =ctx;
+    this.response = response;
+    this.outputStream = new HttpResponseOutputStream(ctx, this);
   }
 
   /**
@@ -206,17 +221,17 @@ public class NioHttpResponse implements HttpServletResponse {
   }
 
   @Override
-  public void sendError(int sc, String msg) throws IOException {
+  public void sendError(int sc, String msg) {
 
   }
 
   @Override
-  public void sendError(int sc) throws IOException {
+  public void sendError(int sc) {
 
   }
 
   @Override
-  public void sendRedirect(String location) throws IOException {
+  public void sendRedirect(String location) {
     //setAppCommitted(true);
     //sendRedirect(location, SC_FOUND);
   }
@@ -251,7 +266,6 @@ public class NioHttpResponse implements HttpServletResponse {
         contentLength = Integer.parseInt(value);
       }
       catch (NumberFormatException e) {
-        ;
       }
       if (contentLength >= 0)
         setContentLength(contentLength);
@@ -340,69 +354,91 @@ public class NioHttpResponse implements HttpServletResponse {
   }
 
   @Override
-  public ServletOutputStream getOutputStream() throws IOException {
-    return new NioResponseStream(this);
+  public ServletOutputStream getOutputStream() {
+    checkState(!hasWriter(), "getWriter has already been called for this response");
+    usingOutputStream = true;
+    return outputStream;
+  }
+
+  private boolean hasWriter() {
+    return null != writer;
   }
 
   @Override
   public PrintWriter getWriter(){
-    NioResponseStream newStream = new NioResponseStream(this);
-    newStream.setCommit(false);
-    try {
-      OutputStreamWriter osr =
-              new OutputStreamWriter(newStream, getCharacterEncoding());
-      writer = new NioResponseWriter(osr,newStream);
-      return writer;
-    }catch (Exception e){
-      log.info("{}",e);
+    checkState(!usingOutputStream, "getOutputStream has already been called for this response");
+    if (!hasWriter()) {
+      writer = new PrintWriter(outputStream);
     }
     return writer;
   }
 
   @Override
   public void setCharacterEncoding(String charset) {
-
+    if (hasWriter()) {
+      return;
+    }
+    characterEncoding = charset;
   }
 
   @Override
   public void setContentLength(int length) {
-    if (isCommitted())
-      return;
-    this.contentLength = length;
+    HttpUtil.setContentLength(response, length);
+    //if (isCommitted())
+    //  return;
+    //this.contentLength = length;
   }
 
   @Override
   public void setContentLengthLong(long len) {
-
+    HttpUtil.setContentLength(response, len);
+    //HttpHeaders.setContentLength(response, len);
   }
 
   @Override
   public void setContentType(String type) {
-
+    if (isCommitted()) {
+      return;
+    }
+    if (hasWriter()) {
+      return;
+    }
+    if (null == type) {
+      contentType = null;
+      return;
+    }
+    MediaType mediaType = MediaType.parse(type);
+    Optional<Charset> charset = mediaType.charset();
+    if (charset.isPresent()) {
+      setCharacterEncoding(charset.get().name());
+    }
+    contentType = mediaType.type() + '/' + mediaType.subtype();
   }
 
   @Override
   public void setBufferSize(int size) {
+    checkNotCommitted();
+    outputStream.setBufferSize(size);
+  }
 
+  void checkNotCommitted() {
+    checkState(!committed, "Cannot perform this operation after response has been committed");
   }
 
   @Override
   public int getBufferSize() {
-    return 0;
+    return outputStream.getBufferSize();
   }
 
   @Override
   public void flushBuffer() throws IOException {
-    //log.info("111111111111111111111111111111111111111");
-    //StringBuffer stringBuffer = sendHeaders();
-    //@Cleanup("flip") ByteBuffer head = ByteBuffer.wrap(stringBuffer.toString().getBytes());
-    //@Cleanup SocketChannel channel = (SocketChannel) selectionKey.channel(); //  从契约获取通道
-    //int body = channel.write(head);
+    this.getCtx().close();
   }
 
   @Override
   public void resetBuffer() {
-
+    checkNotCommitted();
+    outputStream.resetBuffer();
   }
 
   @Override
@@ -412,7 +448,9 @@ public class NioHttpResponse implements HttpServletResponse {
 
   @Override
   public void reset() {
-
+    resetBuffer();
+    usingOutputStream = false;
+    writer = null;
   }
 
   @Override
@@ -435,7 +473,7 @@ public class NioHttpResponse implements HttpServletResponse {
 
   @Override
   public Locale getLocale() {
-    return null;
+    return null == locale ? DEFAULT_LOCALE : locale;
   }
 
   /**
@@ -485,11 +523,36 @@ public class NioHttpResponse implements HttpServletResponse {
     return request.getProtocol();
   }
 
-  public void setRequest(NioHttpRequest request) {
+  public void setRequest(NettyHttpRequest request) {
     this.request = request;
   }
 
-  public NioHttpRequest getRequest() {
+  public NettyHttpRequest getRequest() {
     return request;
+  }
+
+  public ChannelHandlerContext getCtx() {
+    return ctx;
+  }
+
+  public void setCtx(ChannelHandlerContext ctx) {
+    this.ctx = ctx;
+  }
+
+  /**
+   * Get a Netty {@link HttpResponse}, committing the {@link HttpServletResponse}.
+   */
+  public HttpResponse getNettyResponse() {
+    if (committed) {
+      return response;
+    }
+    committed = true;
+    HttpHeaders headers = response.headers();
+    if (null != contentType) {
+      String value = null == characterEncoding ? contentType : contentType + "; charset=" + characterEncoding;
+      headers.set(HttpHeaderNames.CONTENT_TYPE, value);
+    }
+    headers.set(HttpHeaderNames.DATE, new Date());
+    return response;
   }
 }

@@ -4,6 +4,7 @@ import com.chenkuojun.mytomcat.processor.HttpProcessor;
 import com.chenkuojun.mytomcat.utils.YamlParseUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -24,10 +25,10 @@ public class HttpConnector implements Runnable {
 
   // default host
   private String host = "127.0.0.1";
-  private final Map<String, HttpServlet> servletMap;
+  private final ServletContext servletContext;
 
-  public HttpConnector(Map<String, HttpServlet> servletMap){
-    this.servletMap = servletMap;
+  public HttpConnector(ServletContext servletContext){
+    this.servletContext = servletContext;
   }
 
   public void run() {
@@ -54,7 +55,7 @@ public class HttpConnector implements Runnable {
         continue;
       }
       // Hand this socket off to an HttpProcessor
-      HttpProcessor processor = new HttpProcessor(socket,this, servletMap);
+      HttpProcessor processor = new HttpProcessor(socket,this, servletContext);
       threadPoolExecutor.execute(processor);
     }
   }

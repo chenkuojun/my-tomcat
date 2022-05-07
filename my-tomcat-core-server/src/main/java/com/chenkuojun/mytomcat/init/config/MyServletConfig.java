@@ -1,9 +1,8 @@
-package com.chenkuojun.mytomcat.connector.http.config;
+package com.chenkuojun.mytomcat.init.config;
 
-import com.chenkuojun.mytomcat.connector.http.context.MyServletContext;
+import com.chenkuojun.mytomcat.init.context.MyServletContext;
 
 import javax.servlet.*;
-import java.io.IOException;
 import java.util.Enumeration;
 
 /**
@@ -32,7 +31,7 @@ public class MyServletConfig implements Servlet, ServletConfig, java.io.Serializ
     }
 
     @Override
-    public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
+    public void service(ServletRequest req, ServletResponse res) {
 
     }
 
@@ -48,7 +47,7 @@ public class MyServletConfig implements Servlet, ServletConfig, java.io.Serializ
 
     @Override
     public String getServletName() {
-        return "CthulhuServlet";
+        return "my-tomcat";
     }
 
     @Override
@@ -63,7 +62,7 @@ public class MyServletConfig implements Servlet, ServletConfig, java.io.Serializ
 
     @Override
     public Enumeration<String> getInitParameterNames() {
-        return new Enumeration<String>() {
+        return new Enumeration<>() {
             @Override
             public boolean hasMoreElements() {
                 return false;

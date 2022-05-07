@@ -1,6 +1,6 @@
 package com.chenkuojun.mytomcatuseexample;
 
-import com.chenkuojun.mytomcat.connector.http.webcontainer.MyServletWebServerFactory;
+import com.chenkuojun.mytomcat.init.webcontainer.MyServletWebServerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

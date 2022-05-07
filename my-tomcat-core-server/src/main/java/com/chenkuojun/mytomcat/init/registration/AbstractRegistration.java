@@ -1,7 +1,7 @@
-package com.chenkuojun.mytomcat.connector.nettyhttp.registration;
+package com.chenkuojun.mytomcat.init.registration;
 
 
-import com.chenkuojun.mytomcat.connector.nettyhttp.context.NettyEmbeddedContext;
+import com.chenkuojun.mytomcat.init.context.MyServletContext;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.Registration;
@@ -19,14 +19,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author chenkuojun
  */
-public abstract class  AbstractNettyRegistration implements Registration, Registration.Dynamic, ServletConfig, FilterConfig {
+public abstract class AbstractRegistration implements Registration, Registration.Dynamic, ServletConfig, FilterConfig {
 
     private final String               name;
     private final String               className;
-    private final NettyEmbeddedContext context;
+    private final MyServletContext context;
     protected boolean                  asyncSupported;
 
-    protected AbstractNettyRegistration(String name, String className, NettyEmbeddedContext context) {
+    protected AbstractRegistration(String name, String className, MyServletContext context) {
         this.name = checkNotNull(name);
         this.className = checkNotNull(className);
         this.context = checkNotNull(context);
@@ -69,7 +69,7 @@ public abstract class  AbstractNettyRegistration implements Registration, Regist
         return context;
     }
 
-    protected NettyEmbeddedContext getNettyContext() {
+    protected MyServletContext getNettyContext() {
         return context;
     }
 

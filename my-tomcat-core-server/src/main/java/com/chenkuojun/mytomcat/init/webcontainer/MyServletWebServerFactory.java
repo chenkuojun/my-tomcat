@@ -1,6 +1,6 @@
-package com.chenkuojun.mytomcat.connector.http.webcontainer;
+package com.chenkuojun.mytomcat.init.webcontainer;
 
-import com.chenkuojun.mytomcat.connector.http.context.MyServletContext;
+import com.chenkuojun.mytomcat.init.context.MyServletContext;
 import com.chenkuojun.mytomcat.startup.Bootstrap;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -13,16 +13,17 @@ public class MyServletWebServerFactory extends AbstractServletWebServerFactory {
 
     @Override
     public WebServer getWebServer(ServletContextInitializer... initializers) {
+        MyServletContext servletContext = new MyServletContext("",null, bootStrap);
         if(initializers != null){
-            MyServletContext myServletContext = new MyServletContext("",null, bootStrap);
             try {
                 for (ServletContextInitializer initializer : initializers) {
-                    initializer.onStartup(myServletContext);
+                    initializer.onStartup(servletContext);
                 }
             } catch (ServletException e) {
                 e.printStackTrace();
             }
         }
+        bootStrap.setServletContext(servletContext);
         return new MyWebServer(bootStrap);
     }
 }

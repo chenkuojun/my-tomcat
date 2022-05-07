@@ -164,16 +164,18 @@ public class NioResponseStream extends ServletOutputStream {
 
     @Override
     public void write(byte b[], int off, int len) throws IOException {
-        //StringBuffer stringBuffer = this.response.sendHeaders();
+        log.info("22222222222222222222222222222222222222222222");
+        StringBuffer stringBuffer = this.response.sendHeaders();
 
-        //@Cleanup("flip") ByteBuffer head = ByteBuffer.wrap(stringBuffer.toString().getBytes());
+        @Cleanup("flip") ByteBuffer head = ByteBuffer.wrap(stringBuffer.toString().getBytes());
         @Cleanup("flip") ByteBuffer bf = ByteBuffer.wrap(b);
         log.info("capcity:{}",bf.capacity());
         @Cleanup SocketChannel channel = (SocketChannel) selectionKey.channel(); //  从契约获取通道
+        channel.close();
         if(channel.isConnected()){
             //向通道中写入数据
-            //int header = channel.write(head);
-            //log.info("header:{}",header);
+            int header = channel.write(head);
+            log.info("header:{}",header);
             int body = channel.write(bf);
             log.info("body:{}",body);
             //if (write == -1) {

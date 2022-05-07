@@ -1,6 +1,6 @@
 package com.chenkuojun.mytomcat.connector.nettyhttp.utils;
 
-import com.chenkuojun.mytomcat.connector.nettyhttp.context.NettyEmbeddedContext;
+import com.chenkuojun.mytomcat.init.context.MyServletContext;
 import org.apache.commons.lang3.StringUtils;
 
 
@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class URIParser {
 
-    private NettyEmbeddedContext context;
+    private MyServletContext context;
 
     private String servletPath;
 
@@ -19,7 +19,7 @@ public class URIParser {
 
     private String queryString;
 
-    public URIParser(NettyEmbeddedContext context) {
+    public URIParser(MyServletContext context) {
         this.context = context;
     }
 

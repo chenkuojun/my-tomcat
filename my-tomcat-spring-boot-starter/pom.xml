@@ -9,9 +9,9 @@
         <version>1.0.1</version>
     </parent>
 
-    <artifactId>my-tomcat-core-server</artifactId>
+    <artifactId>my-tomcat-spring-boot-starter</artifactId>
     <version>1.0.1</version>
-    <name>my-tomcat-core-server</name>
+    <name>my-tomcat-spring-boot-starter</name>
     <description>Demo project for Spring Boot</description>
     <properties>
         <java.version>11</java.version>

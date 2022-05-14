@@ -72,6 +72,8 @@ public final class HttpRequestLine {
 
     /**
      * Test if the uri includes the given char array.
+     * @param buf buf
+     * @return int
      */
     public int indexOf(char[] buf) {
         return indexOf(buf, buf.length);
@@ -80,6 +82,9 @@ public final class HttpRequestLine {
 
     /**
      * Test if the value of the header includes the given char array.
+     * @param buf buf
+     * @param end end
+     * @return int
      */
     public int indexOf(char[] buf, int end) {
         char firstChar = buf[0];
@@ -104,6 +109,8 @@ public final class HttpRequestLine {
 
     /**
      * Test if the value of the header includes the given string.
+     * @param str str
+     * @return int
      */
     public int indexOf(String str) {
         return indexOf(str.toCharArray(), str.length());
@@ -112,6 +119,9 @@ public final class HttpRequestLine {
 
     /**
      * Returns the index of a character in the value.
+     * @param c c
+     * @param start start
+     * @return int
      */
     public int indexOf(char c, int start) {
         for (int i=start; i<uriEnd; i++) {

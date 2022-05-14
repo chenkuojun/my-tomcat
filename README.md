@@ -12,27 +12,22 @@ example 为demo ,替换掉springboot内置的tomcat,
 
 目前版本框架支持freemark页面的解析
 SNAPSHOT 版本依赖
-~~~
+~~~java
 <dependency>
-  <groupId>com.chenkuojun</groupId>
-  <artifactId>my-tomcat-core-server</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
+    <groupId>com.chenkuojun</groupId>
+    <artifactId>my-tomcat-spring-boot-starter</artifactId>
+    <version>1.0.1</version>
 </dependency>
 ~~~
+项目使用的springboot的starter机制
 
-引用包时需要在启动类添加:
-~~~java
-
-    @Bean
-    MyServletWebServerFactory myServletWebServerFactory(
-            ObjectProvider<UndertowDeploymentInfoCustomizer> deploymentInfoCustomizers,
-            ObjectProvider<UndertowBuilderCustomizer> builderCustomizers) {
-        return new MyServletWebServerFactory();
-    }
+需用在启动类上添加一个注解,用于启动时候自动去校验是不是有启动所需要的类
+~~~
+@EnableMyTomcatsStarter
 ~~~
 
 升级了jdk版本11
-~~~
+
 # 打包命令
 mvn clean source:jar javadoc:jar deploy -DskipTests
 ~~~

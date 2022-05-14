@@ -74,7 +74,9 @@ public final class HttpHeader {
 
     /**
      * Test if the name of the header is equal to the given char array.
-     * All the characters must already be lower case.
+     *All the characters must already be lower case.
+     * @param buf buf
+     * @return boolean
      */
     public boolean equals(char[] buf) {
         return equals(buf, buf.length);
@@ -84,6 +86,10 @@ public final class HttpHeader {
     /**
      * Test if the name of the header is equal to the given char array.
      * All the characters must already be lower case.
+     *
+     * @param buf buf
+     * @param end end
+     * @return boolean
      */
     public boolean equals(char[] buf, int end) {
         if (end != nameEnd)
@@ -97,8 +103,10 @@ public final class HttpHeader {
 
 
     /**
-     * Test if the name of the header is equal to the given string.
+     *Test if the name of the header is equal to the given string.
      * The String given must be made of lower case characters.
+     * @param str str
+     * @return boolean
      */
     public boolean equals(String str) {
         return equals(str.toCharArray(), str.length());
@@ -107,6 +115,8 @@ public final class HttpHeader {
 
     /**
      * Test if the value of the header is equal to the given char array.
+     * @param buf buf
+     * @return boolean
      */
     public boolean valueEquals(char[] buf) {
         return valueEquals(buf, buf.length);
@@ -115,6 +125,9 @@ public final class HttpHeader {
 
     /**
      * Test if the value of the header is equal to the given char array.
+     * @param buf buf
+     * @param end end
+     * @return boolean
      */
     public boolean valueEquals(char[] buf, int end) {
         if (end != valueEnd)
@@ -129,6 +142,8 @@ public final class HttpHeader {
 
     /**
      * Test if the value of the header is equal to the given string.
+     * @param str str
+     * @return boolean
      */
     public boolean valueEquals(String str) {
         return valueEquals(str.toCharArray(), str.length());
@@ -137,6 +152,8 @@ public final class HttpHeader {
 
     /**
      * Test if the value of the header includes the given char array.
+     * @param buf buf
+     * @return boolean
      */
     public boolean valueIncludes(char[] buf) {
         return valueIncludes(buf, buf.length);
@@ -145,6 +162,9 @@ public final class HttpHeader {
 
     /**
      * Test if the value of the header includes the given char array.
+     * @param buf buf
+     * @param end end
+     * @return  boolean
      */
     public boolean valueIncludes(char[] buf, int end) {
         char firstChar = buf[0];
@@ -169,6 +189,8 @@ public final class HttpHeader {
 
     /**
      * Test if the value of the header includes the given string.
+     * @param str str
+     * @return boolean
      */
     public boolean valueIncludes(String str) {
         return valueIncludes(str.toCharArray(), str.length());
@@ -177,6 +199,9 @@ public final class HttpHeader {
 
     /**
      * Returns the index of a character in the value.
+     * @param c c
+     * @param start start
+     * @return int
      */
     public int valueIndexOf(char c, int start) {
         for (int i=start; i<valueEnd; i++) {
@@ -189,7 +214,9 @@ public final class HttpHeader {
 
     /**
      * Test if the name of the header is equal to the given header.
-     * All the characters in the name must already be lower case.
+     *All the characters in the name must already be lower case.
+     * @param header header
+     * @return boolean
      */
     public boolean equals(HttpHeader header) {
         return (equals(header.name, header.nameEnd));
@@ -199,6 +226,8 @@ public final class HttpHeader {
     /**
      * Test if the name and value of the header is equal to the given header.
      * All the characters in the name must already be lower case.
+     * @param header header
+     * @return boolean
      */
     public boolean headerEquals(HttpHeader header) {
         return (equals(header.name, header.nameEnd))
@@ -212,6 +241,7 @@ public final class HttpHeader {
     /**
      * Return hash code. The hash code of the HttpHeader object is the same
      * as returned by new String(name, 0, nameEnd).hashCode().
+     * @return int
      */
     public int hashCode() {
         int h = hashCode;

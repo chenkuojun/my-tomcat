@@ -120,15 +120,14 @@ public class NettyHttpRequest implements HttpServletRequest {
   }
 
   private void parseRequest(FullHttpRequest request) {
-    String method = request.getMethod().name();
-    String uri = request.getUri();
-    String s = request.content().toString(CharsetUtil.UTF_8);
-    String protocol = request.getProtocolVersion().protocolName().toLowerCase();
+    String method = request.method().name();
+    String uri = request.uri();
+    String protocol = request.protocolVersion().protocolName().toLowerCase();
     HttpHeaders headers = request.headers();
     log.info("headers:{}",headers);
-    if (uri.endsWith("favicon.ico")) {
-      return ;
-    }
+    //if (uri.endsWith("favicon.ico")) {
+    //  return ;
+    //}
     this.uri = uri;
     this.url = uri;
     this.method = method;
@@ -309,7 +308,6 @@ public class NettyHttpRequest implements HttpServletRequest {
    * instance of RequestStream associated with this request, but this can
    * be overridden if necessary.
    *
-   * @exception IOException if an input/output error occurs
    * @return  ServletInputStream
    */
   public ServletInputStream createInputStream() {

@@ -478,7 +478,7 @@ public class NettyHttpResponse implements HttpServletResponse {
 
   /**
    * Send the HTTP response headers, if this has not already occurred.
-   *  @throws IOException ioException
+   * @return StringBuffer
    */
   public StringBuffer sendHeaders(){
     if (isCommitted())
@@ -541,6 +541,8 @@ public class NettyHttpResponse implements HttpServletResponse {
 
   /**
    * Get a Netty {@link HttpResponse}, committing the {@link HttpServletResponse}.
+   *
+   * @return HttpResponse
    */
   public HttpResponse getNettyResponse() {
     if (committed) {

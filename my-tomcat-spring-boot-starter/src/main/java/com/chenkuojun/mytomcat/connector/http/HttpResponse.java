@@ -515,10 +515,8 @@ public class HttpResponse implements HttpServletResponse {
    * Internal method that allows a redirect to be sent with a status other
    * than {@link HttpServletResponse#SC_FOUND} (302). No attempt is made to
    * validate the status code.
-   *
-   * @param location Location URL to redirect to
-   * @param status HTTP status code that will be sent
-   * @throws IOException an IO exception occurred
+   * @param location location
+   * @param status status
    */
   public void sendRedirect(String location, int status) {
     if (isCommitted()) {

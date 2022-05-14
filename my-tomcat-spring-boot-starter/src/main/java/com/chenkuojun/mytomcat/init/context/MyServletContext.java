@@ -54,9 +54,9 @@ public class MyServletContext implements ServletContext {
 
     /**
      * 构造函数
-     * @param resourceBasePath
-     * @param resourceLoader
-     * @param bootStrap
+     * @param resourceBasePath resourceBasePath
+     * @param resourceLoader resourceLoader
+     * @param bootStrap bootStrap
      */
     public MyServletContext(String resourceBasePath, @Nullable ResourceLoader resourceLoader, Bootstrap bootStrap) {
         this.resourceLoader = (resourceLoader != null ? resourceLoader : new DefaultResourceLoader());

@@ -308,7 +308,6 @@ public class NettyHttpRequest implements HttpServletRequest {
    * instance of RequestStream associated with this request, but this can
    * be overridden if necessary.
    *
-   * @exception IOException if an input/output error occurs
    * @return  ServletInputStream
    */
   public ServletInputStream createInputStream() {

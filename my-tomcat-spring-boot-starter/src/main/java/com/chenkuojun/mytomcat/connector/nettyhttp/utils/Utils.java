@@ -61,10 +61,9 @@ public class Utils {
     }
 
     /**
-     * Parse the character encoding from the specified content type header. If the content type is null, or there is no
-     * explicit character encoding, <code>null</code> is returned.
      *
-     * @param contentType a content type header
+     * @param contentType contentType
+     * @return String
      */
     public static String getCharsetFromContentType(String contentType) {
 

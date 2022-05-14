@@ -13,7 +13,7 @@
     <inceptionYear>2022</inceptionYear>
 
     <modules>
-        <module>my-tomcat-core-server</module>
+        <module>my-tomcat-spring-boot-starter</module>
         <module>my-tomcat-use-example</module>
     </modules>
 
@@ -59,7 +59,7 @@
         <maven-logback.version>1.2.3</maven-logback.version>
         <maven-slf4j.version>1.7.25</maven-slf4j.version>
         <netty.version>4.1.6.Final</netty.version>
-        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
@@ -183,7 +183,7 @@
 
             <dependency>
                 <groupId>com.chenkuojun</groupId>
-                <artifactId>my-tomcat-core-server</artifactId>
+                <artifactId>my-tomcat-spring-boot-starter</artifactId>
                 <version>1.0.1</version>
             </dependency>
 

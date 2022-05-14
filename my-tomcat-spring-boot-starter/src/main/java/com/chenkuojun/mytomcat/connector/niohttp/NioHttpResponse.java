@@ -440,7 +440,8 @@ public class NioHttpResponse implements HttpServletResponse {
 
   /**
    * Send the HTTP response headers, if this has not already occurred.
-   *  @throws IOException ioException
+   *
+   * @return StringBuffer
    */
   public StringBuffer sendHeaders(){
     if (isCommitted())
